@@ -2,173 +2,142 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#1456a0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1457c5">
 <link rel="manifest" href="manifest.json">
 <title>Mathematic Zone Attendance</title>
 <style>
-:root{font-family:Arial,sans-serif;color:#172b45;background:#f3f7fc}
-*{box-sizing:border-box}body{margin:0}header{background:#1456a0;color:white;padding:18px}
-header h1{font-size:21px;margin:0 0 5px}header p{margin:0;font-size:13px}
-main{max-width:850px;margin:auto;padding:14px}
+:root{--blue:#1457c5;--light:#eef5ff;--ink:#152238;--muted:#63718a;--line:#d8e2f0;--green:#138443;--red:#bd3030}
+*{box-sizing:border-box}body{margin:0;background:#f4f7fc;color:var(--ink);font:16px Arial,sans-serif}
+header{background:var(--blue);color:white;padding:18px 16px;text-align:center}
+header h1{font-size:22px;margin:0 0 5px}header p{margin:0;font-size:13px;opacity:.9}
+main{max-width:900px;margin:18px auto;padding:0 12px}
 nav{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
-button,.tab{border:0;border-radius:9px;padding:11px 13px;background:#1456a0;color:white;font-weight:600;cursor:pointer}
-.tab{background:#dce9f8;color:#1456a0}.tab.active{background:#1456a0;color:white}
-.panel{display:none;background:white;border:1px solid #d8e3f0;border-radius:13px;padding:15px;margin-bottom:13px}
-.panel.active{display:block}h2{font-size:18px;margin:0 0 12px}
-input,select{width:100%;padding:12px;border:1px solid #bdcce0;border-radius:8px;margin:6px 0 12px;font-size:16px}
-label{font-size:13px;font-weight:bold} .muted{color:#64758b;font-size:13px}
-.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
-button.secondary{background:#e4edf8;color:#1456a0}button.danger{background:#a52c37}
-#video{width:100%;max-height:340px;background:#111;border-radius:10px}
-.status{padding:12px;background:#edf4fc;border-radius:9px;margin:10px 0;white-space:pre-wrap}
-.success-card{background:#e8f7ed;border:2px solid #23934b;color:#176b35;border-radius:13px;padding:18px;text-align:center;margin:12px 0}
-.success-mark{font-size:46px;line-height:1.2;font-weight:bold}.success-title{font-size:20px;font-weight:800;margin:5px 0}.success-detail{font-size:14px;line-height:1.6}
-.student{border:1px solid #e0e8f2;border-radius:9px;padding:10px;margin:7px 0}
-#qrBox{display:flex;justify-content:center;padding:15px}
-table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid #e2e9f1;padding:8px;text-align:left}
-.tablewrap{overflow:auto}small{color:#61738a}
+nav button,.btn{border:0;border-radius:9px;background:var(--blue);color:white;padding:10px 13px;font-weight:700;cursor:pointer}
+nav button{background:#dce9ff;color:#16458f}nav button.active{background:var(--blue);color:white}
+section.panel{display:none;background:white;border:1px solid var(--line);border-radius:13px;padding:16px;margin-bottom:14px;box-shadow:0 2px 9px #17365d0b}
+section.panel.active{display:block}h2{font-size:18px;margin:0 0 12px}
+label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}
+input,select{width:100%;padding:11px;border:1px solid #c9d5e5;border-radius:8px;font-size:16px;background:white}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn.secondary{background:#e6eefb;color:#174b9b}.btn.danger{background:var(--red)}.btn.green{background:var(--green)}
+.note{font-size:13px;color:var(--muted);line-height:1.45}.status{padding:10px;border-radius:8px;background:var(--light);margin:10px 0;min-height:20px}
+.student,.record,.qr-card{border:1px solid var(--line);border-radius:10px;padding:11px;margin:9px 0}
+.student strong,.record strong{display:block}.small{font-size:13px;color:var(--muted);margin-top:4px}
+.qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.qr-card{text-align:center;break-inside:avoid}.qr-card canvas,.qr-card img{margin:8px auto;display:block}
+.qr-card .qr-name{font-weight:700}.qr-card button{margin:4px}
+#scanner{width:100%;max-height:300px;background:#111;border-radius:9px;display:none}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;border-bottom:1px solid var(--line);text-align:left}
+.table-wrap{overflow-x:auto}.hidden{display:none!important}
+@media print{header,nav,.no-print,#studentsPanel,#scanPanel,#adminPanel,.note{display:none!important}body{background:white}main{margin:0;padding:0}#qrPanel{display:block!important;border:0}.qr-grid{grid-template-columns:repeat(3,1fr)}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
-<header><h1>Mathematic Zone</h1><p>Offline QR Attendance System</p></header>
+<header><h1>Mathematic Zone</h1><p>Student Attendance System · Check-In Only</p></header>
 <main>
-<div class="status" id="appStatus">Starting app…</div>
-<nav>
-<button class="tab active" data-tab="scan">Gate Scanner</button>
-<button class="tab" data-tab="students">Students</button>
-<button class="tab" data-tab="cards">QR Cards</button>
-<button class="tab" data-tab="reports">Reports</button>
-<button class="tab" data-tab="backup">Backup</button>
-<button class="tab" data-tab="admin">Admin</button>
+<nav class="no-print">
+<button class="active" data-tab="scanPanel">Scan Attendance</button>
+<button data-tab="studentsPanel">Students</button>
+<button data-tab="qrPanel">QR Cards</button>
+<button data-tab="adminPanel">Reports & Admin</button>
 </nav>
 
-<section class="panel active" id="scan">
-<h2>Gate scanner</h2>
-<p class="muted">Scan each student once when they arrive. One scan marks them PRESENT for the day. There is no check-out.</p>
-<div class="row"><button id="startScan">Start camera</button><button class="secondary" id="stopScan">Stop camera</button></div>
-<video id="video" playsinline muted></video>
-<div class="status" id="scanStatus">Camera is stopped. You can also enter a roll number below.</div>
-<label for="manualRoll">Manual roll number</label><input id="manualRoll" placeholder="Enter roll number">
-<button id="manualSubmit">Record attendance</button>
+<section id="scanPanel" class="panel active">
+<h2>Mark Present</h2>
+<p class="note">Scan a student's QR code. The first scan marks the student present for today. Repeated scans show “Already present”. There is no check-out.</p>
+<video id="scanner" playsinline></video>
+<div class="actions no-print"><button class="btn" id="startScan">Start Camera Scanner</button><button class="btn secondary" id="stopScan">Stop Camera</button></div>
+<div class="row">
+<div><label for="manualRoll">Or enter roll number</label><input id="manualRoll" placeholder="Example: MZ001"></div>
+<div style="align-self:end"><button class="btn green" id="manualCheck">Mark Present</button></div>
+</div>
+<div id="scanStatus" class="status" aria-live="polite">Ready.</div>
+<p class="note" id="cameraNote"></p>
 </section>
 
-<section class="panel" id="students">
-<h2>Student list</h2>
-<p class="muted">Import a CSV file with these columns: rollNumber,name,class. Use fictional records while testing.</p>
+<section id="studentsPanel" class="panel">
+<h2>Add / Edit Student</h2>
+<div class="row">
+<div><label for="roll">Roll Number</label><input id="roll" placeholder="Example: MZ001"></div>
+<div><label for="studentName">Student Name</label><input id="studentName" placeholder="Full name"></div>
+<div><label for="studentClass">Class</label><input id="studentClass" placeholder="Example: Grade 8"></div>
+</div>
+<div class="actions"><button class="btn" id="saveStudent">Save Student</button><button class="btn secondary" id="clearStudentForm">Clear Form</button></div>
+<p class="note">A QR code is created automatically when you save a student. The QR contains only the roll number. Changing the student's name or class does not change the QR.</p>
+<div id="studentStatus" class="status">No changes yet.</div>
+<h2 style="margin-top:20px">Import Students from CSV</h2>
+<p class="note">CSV columns must be: rollNumber,name,class. You can export a CSV from a spreadsheet.</p>
 <input type="file" id="csvFile" accept=".csv,text/csv">
-<div class="row"><button id="downloadTemplate" class="secondary">Download CSV template</button><button id="showStudents" class="secondary">Refresh list</button></div>
+<div class="actions"><button class="btn secondary" id="importCsv">Import CSV</button></div>
 <div id="studentList"></div>
 </section>
 
-<section class="panel" id="cards">
-<h2>Student QR card</h2>
-<label for="cardRoll">Student roll number</label><input id="cardRoll" placeholder="Enter roll number">
-<button id="makeQR">Create QR card</button>
-<div id="qrBox"></div><div id="qrDetails" class="muted"></div>
-<p class="muted">The QR code contains only the roll number, not the student's phone number or other private details.</p>
+<section id="qrPanel" class="panel">
+<h2>Student QR Cards</h2>
+<p class="note no-print">QR cards appear automatically for every saved student. Print this page to make cards. Each QR code contains only the student's roll number.</p>
+<div class="actions no-print"><button class="btn" id="printCards">Print QR Cards</button><button class="btn secondary" id="refreshCards">Refresh Cards</button></div>
+<div id="qrGrid" class="qr-grid"></div>
 </section>
 
-<section class="panel" id="reports">
-<h2>Attendance reports</h2>
-<label for="monthPick">Choose month</label><input type="month" id="monthPick">
-<div class="row"><button id="exportMonth">Export monthly CSV</button><button id="refreshReport" class="secondary">Show records</button></div>
+<section id="adminPanel" class="panel">
+<h2>Attendance Reports & Admin</h2>
+<div class="row no-print">
+<div><label for="reportMonth">Report month</label><input type="month" id="reportMonth"></div>
+<div style="align-self:end"><button class="btn secondary" id="loadReport">Load Report</button></div>
+</div>
+<div class="actions no-print"><button class="btn secondary" id="exportCsv">Export Attendance CSV</button><button class="btn secondary" id="backupJson">Download Full Backup</button><label class="btn secondary" style="display:inline-block">Restore Backup<input type="file" id="restoreFile" accept=".json" hidden></label></div>
 <div id="reportSummary" class="status">No report loaded.</div>
-<div class="tablewrap" id="reportTable"></div>
+<div id="reportList"></div>
+<hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+<h2>Clear Attendance Data</h2>
+<p class="note">Export a backup before clearing. These actions permanently remove attendance records from this browser on this device.</p>
+<div class="actions no-print"><button class="btn danger" id="clearMonth">Clear Selected Month</button><button class="btn danger" id="clearAll">Clear All Attendance</button></div>
+<p class="note"><strong>Important:</strong> This is a local starter app. Admin controls are not protected by a secure login. Anyone with access to this page on this phone can use them. Use test data until the academy approves a secure setup.</p>
 </section>
-
-<section class="panel" id="admin">
-<h2>Admin — Manage records</h2>
-<div class="status">Make a backup before changing or deleting records. These controls are available on this phone; this starter version does not have secure administrator login.</div>
-<h3>Edit student</h3>
-<label for="adminStudentPick">Choose student</label><select id="adminStudentPick"></select>
-<label for="editStudentName">Student name</label><input id="editStudentName" placeholder="Student name">
-<label for="editStudentClass">Class</label><input id="editStudentClass" placeholder="Class">
-<div class="row"><button id="saveStudentEdit">Save student changes</button><button id="deleteStudent" class="danger">Delete student</button></div>
-<hr>
-<h3>Edit attendance</h3>
-<label for="adminRecordPick">Choose attendance record</label><select id="adminRecordPick"></select>
-<label for="editRecordDate">Date</label><input id="editRecordDate" type="date">
-<label for="editRecordTime">Arrival time</label><input id="editRecordTime" placeholder="09:00:00 AM">
-<label for="editRecordStatus">Status</label><select id="editRecordStatus"><option value="Present">Present</option><option value="Absent">Absent</option></select>
-<div class="row"><button id="saveRecordEdit">Save attendance changes</button><button id="deleteRecord" class="danger">Delete attendance</button></div>
-<p class="muted">Deleting a student removes them from the student list but keeps their old attendance records. Deleting an attendance record does not delete the student.</p>
-</section>
-
-<section class="panel" id="backup">
-<h2>Backup and restore</h2>
-<p class="muted">Export a backup regularly. If the phone is lost, reset, or browser data is cleared, unexported offline records may be lost.</p>
-<div class="row"><button id="backupJSON">Download full backup</button><button class="secondary" id="restoreButton">Restore backup</button></div>
-<input type="file" id="restoreFile" accept=".json" hidden>
-<p class="muted">Monthly CSV files can be opened in Google Sheets. This starter version does not automatically sync to your existing Google Sheet.</p>
-</section>
+<p class="note">Data is saved on this device in this browser. Keep regular backups. Clearing browser data, losing the phone, or changing browsers may remove records. Camera scanning needs HTTPS and camera permission. If the scanner is unsupported, use roll-number entry.</p>
 </main>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 const DB_NAME='MZAttendanceDB', DB_VERSION=1;
-let db, stream=null, scanLoop=false, detector=null, lastCode='', lastAt=0;
+let db, stream=null, detector=null, scanning=false, lastCode='', lastAt=0;
 const $=id=>document.getElementById(id);
-function setStatus(msg){$('appStatus').textContent=msg}
-function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains('students'))d.createObjectStore('students',{keyPath:'roll'});if(!d.objectStoreNames.contains('records'))d.createObjectStore('records',{keyPath:'key'});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains('students'))d.createObjectStore('students',{keyPath:'roll'});if(!d.objectStoreNames.contains('attendance')){const s=d.createObjectStore('attendance',{keyPath:'id',autoIncrement:true});s.createIndex('date','date');s.createIndex('roll','roll');}};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
 function store(name,mode='readonly'){return db.transaction(name,mode).objectStore(name)}
-function getAll(name){return new Promise((res,rej)=>{const r=store(name).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
-function getOne(name,key){return new Promise((res,rej)=>{const r=store(name).get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
-function put(name,obj){return new Promise((res,rej)=>{const r=store(name,'readwrite').put(obj);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
-function todayParts(){const d=new Date();return {date:[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'),day:d.toLocaleDateString('en-US',{weekday:'long'}),time:d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true})}}
-async function recordRoll(raw){
- const roll=String(raw||'').trim();
- if(!roll){$('scanStatus').textContent='Enter a roll number first.';return}
- const student=await getOne('students',roll);
- if(!student){$('scanStatus').textContent='Invalid roll number. This student is not in the imported list.';return}
- const p=todayParts(),key=roll+'_'+p.date;
- const existing=await getOne('records',key);
- if(existing){
-   $('scanStatus').innerHTML=`<div class="success-card"><div class="success-mark">✓</div><div class="success-title">ALREADY PRESENT</div><div class="success-detail">${escapeHTML(student.name)}<br>Roll: ${escapeHTML(roll)}<br>Attendance was already marked today at ${escapeHTML(existing.checkIn||'')}.</div></div>`;
- } else {
-   const rec={key,roll,name:student.name,className:student.className||'',date:p.date,day:p.day,checkIn:p.time,status:'Present'};
-   await put('records',rec);
-   $('scanStatus').innerHTML=`<div class="success-card"><div class="success-mark">✓</div><div class="success-title">PRESENT — CHECK-IN SUCCESSFUL</div><div class="success-detail">${escapeHTML(student.name)}<br>Roll: ${escapeHTML(roll)}<br>${escapeHTML(p.day)}, ${escapeHTML(p.date)}<br>Time: ${escapeHTML(p.time)}</div></div>`;
- }
- $('manualRoll').value='';
- if($('monthPick').value===p.date.slice(0,7))loadReport();
-}
-function csvParse(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());return lines.map(line=>{let out=[],v='',q=false;for(let i=0;i<line.length;i++){let c=line[i];if(c==='"'&&line[i+1]==='"'&&q){v+='"';i++}else if(c==='"')q=!q;else if(c===','&&!q){out.push(v.trim());v=''}else v+=c}out.push(v.trim());return out})}
-$('csvFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;const rows=csvParse(await f.text());const headers=rows.shift().map(x=>x.toLowerCase());const ri=headers.indexOf('rollnumber'),ni=headers.indexOf('name'),ci=headers.indexOf('class');if(ri<0||ni<0){alert('CSV needs rollNumber and name columns.');return}let count=0;for(const row of rows){const roll=(row[ri]||'').trim(),name=(row[ni]||'').trim();if(roll&&name){await put('students',{roll,name,className:ci>=0?(row[ci]||'').trim():''});count++}}alert(`Imported or updated ${count} students.`);loadStudents();e.target.value=''});
-async function loadStudents(){const arr=await getAll('students');arr.sort((a,b)=>a.roll.localeCompare(b.roll,undefined,{numeric:true}));$('studentList').innerHTML=arr.map(s=>`<div class="student"><b>${escapeHTML(s.name)}</b><br><small>Roll: ${escapeHTML(s.roll)} · Class: ${escapeHTML(s.className||'—')}</small></div>`).join('')||'<p class="muted">No students imported yet.</p>'}
-function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-$('manualSubmit').onclick=()=>recordRoll($('manualRoll').value);
-$('showStudents').onclick=loadStudents;
-$('downloadTemplate').onclick=()=>download('students_template.csv','rollNumber,name,class\nTEST001,Sample Student,Grade 8\nTEST002,Another Student,Grade 9\n');
-$('makeQR').onclick=async()=>{const roll=$('cardRoll').value.trim(),s=await getOne('students',roll);$('qrBox').innerHTML='';$('qrDetails').textContent='';if(!s){$('qrDetails').textContent='Student not found. Import the student list first.';return}if(typeof QRCode==='undefined'){$('qrDetails').textContent='QR generator is not loaded. Connect to the internet once, reload the app, and try again.';return}new QRCode($('qrBox'),{text:roll,width:220,height:220});$('qrDetails').textContent=`${s.name} · Roll ${s.roll} · ${s.className||''}`};
-async function startCamera(){if(!('BarcodeDetector'in window)){ $('scanStatus').textContent='This browser does not support built-in QR scanning. Use manual roll entry, or try an updated Chrome browser.';return}try{detector=new BarcodeDetector({formats:['qr_code']});stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});$('video').srcObject=stream;await $('video').play();scanLoop=true;scanFrame()}catch(e){$('scanStatus').textContent='Camera could not start. Allow camera permission and use the app through its HTTPS website.'}}
-async function scanFrame(){if(!scanLoop||!stream)return;try{const codes=await detector.detect($('video'));if(codes.length){const code=codes[0].rawValue,now=Date.now();if(code&&!(code===lastCode&&now-lastAt<3000)){lastCode=code;lastAt=now;await recordRoll(code)}}}catch(e){}requestAnimationFrame(scanFrame)}
-function stopCamera(){scanLoop=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('video').srcObject=null}
-$('startScan').onclick=startCamera;$('stopScan').onclick=stopCamera;
-function download(name,content,type='text/csv'){const a=document.createElement('a');const url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
-async function loadReport(){const month=$('monthPick').value||new Date().toISOString().slice(0,7);const arr=(await getAll('records')).filter(r=>r.date.startsWith(month)).sort((a,b)=>(a.date+a.roll).localeCompare(b.date+b.roll));$('reportSummary').textContent=`${arr.length} attendance record(s) for ${month}.`;$('reportTable').innerHTML='<table><thead><tr><th>Date</th><th>Day</th><th>Roll</th><th>Name</th><th>Arrival time</th><th>Status</th></tr></thead><tbody>'+arr.map(r=>`<tr><td>${escapeHTML(r.date)}</td><td>${escapeHTML(r.day)}</td><td>${escapeHTML(r.roll)}</td><td>${escapeHTML(r.name)}</td><td>${escapeHTML(r.checkIn)}</td><td>✓ Present</td></tr>`).join('')+'</tbody></table>'}
-
-async function loadAdmin(){
- const students=(await getAll('students')).sort((a,b)=>a.roll.localeCompare(b.roll,undefined,{numeric:true}));
- $('adminStudentPick').innerHTML=students.map(s=>`<option value="${escapeHTML(s.roll)}">${escapeHTML(s.roll)} — ${escapeHTML(s.name)}</option>`).join('');
- const records=(await getAll('records')).sort((a,b)=>(b.date+b.roll).localeCompare(a.date+a.roll));
- $('adminRecordPick').innerHTML=records.map(r=>`<option value="${escapeHTML(r.key)}">${escapeHTML(r.date)} — ${escapeHTML(r.roll)} — ${escapeHTML(r.name)}</option>`).join('');
- loadAdminStudentFields();loadAdminRecordFields();
-}
-async function loadAdminStudentFields(){const roll=$('adminStudentPick').value;if(!roll)return $('editStudentName').value=$('editStudentClass').value='';const s=await getOne('students',roll);if(s){$('editStudentName').value=s.name;$('editStudentClass').value=s.className||''}}
-async function loadAdminRecordFields(){const key=$('adminRecordPick').value;if(!key)return $('editRecordDate').value=$('editRecordTime').value='';const r=await getOne('records',key);if(r){$('editRecordDate').value=r.date;$('editRecordTime').value=r.checkIn||'';$('editRecordStatus').value=r.status||'Present'}}
-$('adminStudentPick').onchange=loadAdminStudentFields;$('adminRecordPick').onchange=loadAdminRecordFields;
-$('saveStudentEdit').onclick=async()=>{const oldRoll=$('adminStudentPick').value;if(!oldRoll)return alert('No student selected.');const old=await getOne('students',oldRoll);if(!old)return;const name=$('editStudentName').value.trim(),className=$('editStudentClass').value.trim();if(!name)return alert('Student name is required.');await put('students',{...old,name,className});const recs=(await getAll('records')).filter(r=>r.roll===oldRoll);for(const r of recs){r.name=name;r.className=className;await put('records',r)}alert('Student details updated.');await loadStudents();await loadAdmin();await loadReport()};
-$('deleteStudent').onclick=async()=>{const roll=$('adminStudentPick').value;if(!roll)return alert('No student selected.');if(!confirm(`Delete student ${roll} from the student list? Existing attendance records will be kept.`))return;await new Promise((res,rej)=>{const q=store('students','readwrite').delete(roll);q.onsuccess=res;q.onerror=()=>rej(q.error)});alert('Student removed from the student list. Old attendance records were kept.');await loadStudents();await loadAdmin()};
-$('saveRecordEdit').onclick=async()=>{const oldKey=$('adminRecordPick').value;if(!oldKey)return alert('No attendance record selected.');const r=await getOne('records',oldKey);if(!r)return;const date=$('editRecordDate').value,time=$('editRecordTime').value.trim();if(!date||!time)return alert('Date and arrival time are required.');const newKey=r.roll+'_'+date;if(newKey!==oldKey&&await getOne('records',newKey))return alert('This student already has an attendance record for that date.');r.date=date;r.day=new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'});r.checkIn=time;r.status=$('editRecordStatus').value;r.key=newKey;if(newKey!==oldKey)await new Promise((res,rej)=>{const q=store('records','readwrite').delete(oldKey);q.onsuccess=res;q.onerror=()=>rej(q.error)});await put('records',r);alert('Attendance record updated.');await loadAdmin();await loadReport()};
-$('deleteRecord').onclick=async()=>{const key=$('adminRecordPick').value;if(!key)return alert('No attendance record selected.');if(!confirm('Permanently delete this attendance record?'))return;await new Promise((res,rej)=>{const q=store('records','readwrite').delete(key);q.onsuccess=res;q.onerror=()=>rej(q.error)});alert('Attendance record deleted.');await loadAdmin();await loadReport()};
-
-$('refreshReport').onclick=loadReport;$('monthPick').value=new Date().toISOString().slice(0,7);
-$('exportMonth').onclick=async()=>{const month=$('monthPick').value||new Date().toISOString().slice(0,7),arr=(await getAll('records')).filter(r=>r.date.startsWith(month));const cols=['roll','name','className','date','day','checkIn','status'];const csv=[cols.join(','),...arr.map(r=>cols.map(k=>'"'+String(r[k]||'').replace(/"/g,'""')+'"').join(','))].join('\n');download(`MathematicZone_${month}.csv`,csv)};
-$('backupJSON').onclick=async()=>{const data={app:'Mathematic Zone Attendance',version:1,exportedAt:new Date().toISOString(),students:await getAll('students'),records:await getAll('records')};download('MathematicZone_Backup.json',JSON.stringify(data,null,2),'application/json')};
-$('restoreButton').onclick=()=>$('restoreFile').click();
-$('restoreFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.students)||!Array.isArray(d.records))throw Error();for(const s of d.students)await put('students',s);for(const r of d.records)await put('records',r);alert('Backup restored.');loadStudents();loadReport()}catch(err){alert('Backup file is not valid.')}e.target.value=''};
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='students')loadStudents();if(b.dataset.tab==='reports')loadReport();if(b.dataset.tab==='admin')loadAdmin()});
-(async()=>{try{db=await openDB();setStatus('Ready. Student data and attendance are stored on this phone.');if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});loadStudents()}catch(e){setStatus('Could not open local storage. Please use an updated Chrome browser.')}})();
+function all(name){return new Promise((res,rej)=>{const r=store(name).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function put(name,obj){return new Promise((res,rej)=>{const r=store(name,'readwrite').put(obj);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function del(name,key){return new Promise((res,rej)=>{const r=store(name,'readwrite').delete(key);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
+function clearStore(name){return new Promise((res,rej)=>{const r=store(name,'readwrite').clear();r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
+function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function safeText(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function markPresent(raw){const roll=String(raw||'').trim();if(!roll){$('scanStatus').textContent='Enter a roll number first.';return}const students=await all('students');const student=students.find(s=>s.roll.toLowerCase()===roll.toLowerCase());if(!student){$('scanStatus').textContent='Student not found. Add or import this student first.';return}
+const date=today(),records=await all('attendance');if(records.some(r=>r.roll.toLowerCase()===student.roll.toLowerCase()&&r.date===date)){$('scanStatus').textContent=`Already present: ${student.name} (${student.roll})`;return}
+const now=new Date();await put('attendance',{roll:student.roll,name:student.name,className:student.className,date,time:now.toLocaleTimeString(),status:'Present'});$('scanStatus').textContent=`✓ PRESENT — ${student.name} (${student.roll})`;$('manualRoll').value='';}
+async function renderStudents(){const a=(await all('students')).sort((x,y)=>x.roll.localeCompare(y.roll));$('studentList').innerHTML=a.map(s=>`<div class="student"><strong>${safeText(s.name)} · ${safeText(s.roll)}</strong><div class="small">${safeText(s.className||'')}</div><div class="actions no-print"><button class="btn secondary" data-edit="${safeText(s.roll)}">Edit</button><button class="btn danger" data-delete="${safeText(s.roll)}">Delete</button></div></div>`).join('')||'<p class="note">No students added yet.</p>';renderQR(a)}
+function renderQR(students){const grid=$('qrGrid');grid.innerHTML='';if(!students.length){grid.innerHTML='<p class="note">Add students to generate QR cards automatically.</p>';return}students.forEach(s=>{const card=document.createElement('div');card.className='qr-card';card.innerHTML=`<div class="qr-name">${safeText(s.name)}</div><div class="small">${safeText(s.roll)} · ${safeText(s.className||'')}</div><div class="qr-code"></div>`;grid.appendChild(card);const target=card.querySelector('.qr-code');if(window.QRCode){new QRCode(target,{text:s.roll,width:128,height:128,correctLevel:QRCode.CorrectLevel.M})}else{target.textContent='QR library unavailable. Connect to internet and reload.'}})}
+$('saveStudent').onclick=async()=>{const roll=$('roll').value.trim(),name=$('studentName').value.trim(),className=$('studentClass').value.trim();if(!roll||!name){$('studentStatus').textContent='Roll number and student name are required.';return}await put('students',{roll,name,className});$('studentStatus').textContent=`Saved ${name}. QR card generated automatically.`;$('roll').value='';$('studentName').value='';$('studentClass').value='';await renderStudents()};
+$('clearStudentForm').onclick=()=>{['roll','studentName','studentClass'].forEach(id=>$(id).value='')};
+$('studentList').addEventListener('click',async e=>{const edit=e.target.dataset.edit,remove=e.target.dataset.delete;if(edit){const s=(await all('students')).find(x=>x.roll===edit);if(s){$('roll').value=s.roll;$('studentName').value=s.name;$('studentClass').value=s.className||'';window.scrollTo({top:0,behavior:'smooth'})}}if(remove&&confirm(`Delete student ${remove}? Existing attendance records will remain.`)){await del('students',remove);await renderStudents()}});
+$('manualCheck').onclick=()=>markPresent($('manualRoll').value);
+$('manualRoll').addEventListener('keydown',e=>{if(e.key==='Enter')markPresent($('manualRoll').value)});
+async function importCSV(){const file=$('csvFile').files[0];if(!file){$('studentStatus').textContent='Choose a CSV file first.';return}const text=await file.text();const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());let count=0;for(let i=1;i<lines.length;i++){const cols=lines[i].split(',').map(x=>x.trim().replace(/^"|"$/g,''));if(cols[0]&&cols[1]){await put('students',{roll:cols[0],name:cols[1],className:cols[2]||''});count++}}$('studentStatus').textContent=`Imported or updated ${count} students. QR cards generated automatically.`;await renderStudents()}
+$('importCsv').onclick=importCSV;
+$('printCards').onclick=()=>window.print();$('refreshCards').onclick=renderStudents;
+function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"'}
+async function loadReport(){const month=$('reportMonth').value||today().slice(0,7),rows=(await all('attendance')).filter(r=>r.date.startsWith(month)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));$('reportSummary').textContent=`${rows.length} attendance record(s) for ${month}.`;$('reportList').innerHTML=rows.map(r=>`<div class="record"><strong>${safeText(r.name)} · ${safeText(r.roll)}</strong><div class="small">${safeText(r.date)} · ${safeText(r.time)} · ${safeText(r.status)}</div><div class="actions no-print"><button class="btn secondary" data-record-edit="${r.id}">Edit</button><button class="btn danger" data-record-delete="${r.id}">Delete</button></div></div>`).join('')||'<p class="note">No records for this month.</p>'}
+$('loadReport').onclick=loadReport;
+$('reportList').addEventListener('click',async e=>{const id=Number(e.target.dataset.recordEdit||e.target.dataset.recordDelete);if(!id)return;const rows=await all('attendance'),r=rows.find(x=>x.id===id);if(!r)return;if(e.target.dataset.recordDelete){if(confirm('Delete this attendance record?')){await del('attendance',id);loadReport()}return}const date=prompt('Attendance date (YYYY-MM-DD):',r.date);if(date===null)return;const time=prompt('Attendance time:',r.time);if(time===null)return;const status=prompt('Status:',r.status);if(status===null)return;await put('attendance',{...r,date,time,status});loadReport()});
+$('exportCsv').onclick=async()=>{const month=$('reportMonth').value||today().slice(0,7),rows=(await all('attendance')).filter(r=>r.date.startsWith(month));download('attendance-'+month+'.csv',['Roll Number,Name,Class,Date,Time,Status',...rows.map(r=>[r.roll,r.name,r.className,r.date,r.time,r.status].map(csvEscape).join(','))].join('\n'),'text/csv')};
+$('backupJson').onclick=async()=>download('mathematic-zone-backup-'+today()+'.json',JSON.stringify({students:await all('students'),attendance:await all('attendance')},null,2),'application/json');
+$('restoreFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data.students)||!Array.isArray(data.attendance))throw Error();if(!confirm('Restore backup? Existing data will be replaced.'))return;await clearStore('students');await clearStore('attendance');for(const s of data.students)await put('students',s);for(const r of data.attendance){const copy={...r};delete copy.id;await put('attendance',copy)}await renderStudents();await loadReport();alert('Backup restored.')}catch{alert('This backup file is not valid.')}e.target.value=''};
+$('clearMonth').onclick=async()=>{const month=$('reportMonth').value||today().slice(0,7);if(!confirm(`Permanently clear all attendance for ${month}? Export a backup first.`))return;for(const r of await all('attendance'))if(r.date.startsWith(month))await del('attendance',r.id);await loadReport()};
+$('clearAll').onclick=async()=>{if(!confirm('Permanently clear ALL attendance records on this device? Export a backup first.'))return;await clearStore('attendance');await loadReport()};
+function download(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
+$('startScan').onclick=async()=>{if(!('BarcodeDetector'in window)){$('cameraNote').textContent='This browser does not support QR camera scanning. Use the roll-number field below.';return}try{detector=new BarcodeDetector({formats:['qr_code']});stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});$('scanner').srcObject=stream;$('scanner').style.display='block';await $('scanner').play();scanning=true;scanLoop()}catch(e){$('cameraNote').textContent='Camera could not start. Check camera permission or use manual roll entry.'}};
+async function scanLoop(){if(!scanning)return;try{const codes=await detector.detect($('scanner'));if(codes.length){const code=codes[0].rawValue,now=Date.now();if(code!==lastCode||now-lastAt>2500){lastCode=code;lastAt=now;await markPresent(code)}}}catch(e){}requestAnimationFrame(scanLoop)}
+$('stopScan').onclick=()=>{scanning=false;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('scanner').style.display='none'};
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('section.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='studentsPanel')renderStudents();if(b.dataset.tab==='qrPanel')renderStudents();if(b.dataset.tab==='adminPanel')loadReport()});
+(async()=>{db=await openDB();$('reportMonth').value=today().slice(0,7);await renderStudents();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});})();
 </script>
-</body>
-</html>
+</body></html>
