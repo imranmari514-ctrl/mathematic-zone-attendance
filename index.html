@@ -4,140 +4,244 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1457c5">
-<link rel="manifest" href="manifest.json">
 <title>Mathematic Zone Attendance</title>
+<link rel="manifest" href="manifest.json">
 <style>
-:root{--blue:#1457c5;--light:#eef5ff;--ink:#152238;--muted:#63718a;--line:#d8e2f0;--green:#138443;--red:#bd3030}
-*{box-sizing:border-box}body{margin:0;background:#f4f7fc;color:var(--ink);font:16px Arial,sans-serif}
-header{background:var(--blue);color:white;padding:18px 16px;text-align:center}
-header h1{font-size:22px;margin:0 0 5px}header p{margin:0;font-size:13px;opacity:.9}
-main{max-width:900px;margin:18px auto;padding:0 12px}
-nav{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
-nav button,.btn{border:0;border-radius:9px;background:var(--blue);color:white;padding:10px 13px;font-weight:700;cursor:pointer}
-nav button{background:#dce9ff;color:#16458f}nav button.active{background:var(--blue);color:white}
-section.panel{display:none;background:white;border:1px solid var(--line);border-radius:13px;padding:16px;margin-bottom:14px;box-shadow:0 2px 9px #17365d0b}
-section.panel.active{display:block}h2{font-size:18px;margin:0 0 12px}
-label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}
-input,select{width:100%;padding:11px;border:1px solid #c9d5e5;border-radius:8px;font-size:16px;background:white}
-.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+:root{--blue:#1457c5;--blue2:#eaf2ff;--ink:#17243a;--muted:#607089;--line:#dce5f2;--green:#16834a;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:#f4f7fc;color:var(--ink);font:16px system-ui,Arial,sans-serif}
+header{background:linear-gradient(120deg,#1047a5,#2878e8);color:#fff;padding:22px 16px}
+header h1{margin:0;font-size:23px}header p{margin:5px 0 0;opacity:.9}
+main{max-width:980px;margin:18px auto;padding:0 12px 40px}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+nav button,.btn{border:0;border-radius:10px;padding:11px 14px;background:var(--blue);color:#fff;font-weight:650;cursor:pointer}
+nav button{background:#e4ecf8;color:#1d3760}nav button.active{background:var(--blue);color:#fff}
+.card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:16px;margin:12px 0;box-shadow:0 3px 14px #17365d0a}
+h2{font-size:19px;margin:0 0 12px}.muted{color:var(--muted);font-size:14px}
+label{display:block;font-weight:600;font-size:14px;margin:10px 0 5px}
+input,select{width:100%;padding:12px;border:1px solid #cbd7e8;border-radius:9px;font:inherit;background:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.btn.secondary{background:#e6eefb;color:#174b9b}.btn.danger{background:var(--red)}.btn.green{background:var(--green)}
-.note{font-size:13px;color:var(--muted);line-height:1.45}.status{padding:10px;border-radius:8px;background:var(--light);margin:10px 0;min-height:20px}
-.student,.record,.qr-card{border:1px solid var(--line);border-radius:10px;padding:11px;margin:9px 0}
-.student strong,.record strong{display:block}.small{font-size:13px;color:var(--muted);margin-top:4px}
-.qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
-.qr-card{text-align:center;break-inside:avoid}.qr-card canvas,.qr-card img{margin:8px auto;display:block}
-.qr-card .qr-name{font-weight:700}.qr-card button{margin:4px}
-#scanner{width:100%;max-height:300px;background:#111;border-radius:9px;display:none}
-table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;border-bottom:1px solid var(--line);text-align:left}
-.table-wrap{overflow-x:auto}.hidden{display:none!important}
-@media print{header,nav,.no-print,#studentsPanel,#scanPanel,#adminPanel,.note{display:none!important}body{background:white}main{margin:0;padding:0}#qrPanel{display:block!important;border:0}.qr-grid{grid-template-columns:repeat(3,1fr)}}
+.btn.secondary{background:#e8eef8;color:#1b355b}.btn.danger{background:#b42318}.btn.green{background:#16834a}
+.notice{padding:11px 13px;border-radius:10px;background:#eef5ff;margin:10px 0;font-size:14px}
+#message{font-weight:650;margin-top:10px;min-height:24px}
+#message.ok{color:var(--green)}#message.err{color:var(--red)}
+video{width:100%;max-height:360px;object-fit:cover;background:#111;border-radius:12px}
+.hidden{display:none!important}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:9px 7px;border-bottom:1px solid var(--line);vertical-align:middle}th{background:#f5f8fd}
+.tablewrap{overflow-x:auto}
+.qrgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.qr-card{border:1px dashed #9aabc4;border-radius:12px;padding:12px;text-align:center;break-inside:avoid}
+.qr-card .qr{display:flex;justify-content:center;margin:8px auto}
+.qr-card strong{display:block}.small{font-size:12px;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+@media print{header,nav,.no-print,.notice,footer{display:none!important}body{background:#fff}.card{border:0;box-shadow:none;padding:0}.qrgrid{grid-template-columns:repeat(3,1fr)}.qr-card{margin:5px}}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
-<header><h1>Mathematic Zone</h1><p>Student Attendance System · Check-In Only</p></header>
+<header><h1>Mathematic Zone</h1><p>Student Attendance Management</p></header>
 <main>
 <nav class="no-print">
-<button class="active" data-tab="scanPanel">Scan Attendance</button>
-<button data-tab="studentsPanel">Students</button>
-<button data-tab="qrPanel">QR Cards</button>
-<button data-tab="adminPanel">Reports & Admin</button>
+<button class="active" data-tab="attendance">Attendance</button>
+<button data-tab="students">Students</button>
+<button data-tab="qrcards">QR Cards</button>
+<button data-tab="reports">Reports</button>
+<button data-tab="admin">Admin</button>
 </nav>
 
-<section id="scanPanel" class="panel active">
+<section id="attendance" class="tab">
+<div class="card">
 <h2>Mark Present</h2>
-<p class="note">Scan a student's QR code. The first scan marks the student present for today. Repeated scans show “Already present”. There is no check-out.</p>
-<video id="scanner" playsinline></video>
-<div class="actions no-print"><button class="btn" id="startScan">Start Camera Scanner</button><button class="btn secondary" id="stopScan">Stop Camera</button></div>
-<div class="row">
-<div><label for="manualRoll">Or enter roll number</label><input id="manualRoll" placeholder="Example: MZ001"></div>
-<div style="align-self:end"><button class="btn green" id="manualCheck">Mark Present</button></div>
+<div class="notice">Scan a student's QR code or enter the roll number manually. Each student can be marked present once per day.</div>
+<div class="actions no-print">
+<button class="btn" id="startScan">Start Camera Scanner</button>
+<button class="btn secondary" id="stopScan" disabled>Stop Scanner</button>
 </div>
-<div id="scanStatus" class="status" aria-live="polite">Ready.</div>
-<p class="note" id="cameraNote"></p>
+<video id="video" class="hidden" playsinline muted></video>
+<div id="scanStatus" class="muted"></div>
+<label for="manualRoll">Manual roll number</label>
+<div class="grid">
+<input id="manualRoll" placeholder="Enter roll number" autocomplete="off">
+<button class="btn green" id="manualMark">Mark Present</button>
+</div>
+<div id="message" role="status" aria-live="polite"></div>
+</div>
+<div class="card">
+<h2>Today's Attendance</h2>
+<div id="todayCount" class="muted"></div>
+<div class="tablewrap"><table><thead><tr><th>Roll No.</th><th>Name</th><th>Class</th><th>Time</th></tr></thead><tbody id="todayRows"></tbody></table></div>
+</div>
 </section>
 
-<section id="studentsPanel" class="panel">
-<h2>Add / Edit Student</h2>
-<div class="row">
-<div><label for="roll">Roll Number</label><input id="roll" placeholder="Example: MZ001"></div>
-<div><label for="studentName">Student Name</label><input id="studentName" placeholder="Full name"></div>
-<div><label for="studentClass">Class</label><input id="studentClass" placeholder="Example: Grade 8"></div>
+<section id="students" class="tab hidden">
+<div class="card">
+<h2 id="studentFormTitle">Add Student</h2>
+<div class="grid">
+<div><label for="studentName">Student name</label><input id="studentName" placeholder="Student name"></div>
+<div><label for="studentRoll">Roll number</label><input id="studentRoll" placeholder="Unique roll number"></div>
+<div><label for="studentClass">Class</label><input id="studentClass" placeholder="Class / grade"></div>
 </div>
-<div class="actions"><button class="btn" id="saveStudent">Save Student</button><button class="btn secondary" id="clearStudentForm">Clear Form</button></div>
-<p class="note">A QR code is created automatically when you save a student. The QR contains only the roll number. Changing the student's name or class does not change the QR.</p>
-<div id="studentStatus" class="status">No changes yet.</div>
-<h2 style="margin-top:20px">Import Students from CSV</h2>
-<p class="note">CSV columns must be: rollNumber,name,class. You can export a CSV from a spreadsheet.</p>
-<input type="file" id="csvFile" accept=".csv,text/csv">
-<div class="actions"><button class="btn secondary" id="importCsv">Import CSV</button></div>
-<div id="studentList"></div>
+<div class="actions"><button class="btn" id="saveStudent">Save Student & Generate QR</button><button class="btn secondary hidden" id="cancelEdit">Cancel Edit</button></div>
+<div id="studentMessage" class="muted"></div>
+</div>
+<div class="card"><h2>Student List</h2><div class="tablewrap"><table><thead><tr><th>Roll</th><th>Name</th><th>Class</th><th>Actions</th></tr></thead><tbody id="studentRows"></tbody></table></div></div>
 </section>
 
-<section id="qrPanel" class="panel">
+<section id="qrcards" class="tab hidden">
+<div class="card">
 <h2>Student QR Cards</h2>
-<p class="note no-print">QR cards appear automatically for every saved student. Print this page to make cards. Each QR code contains only the student's roll number.</p>
-<div class="actions no-print"><button class="btn" id="printCards">Print QR Cards</button><button class="btn secondary" id="refreshCards">Refresh Cards</button></div>
-<div id="qrGrid" class="qr-grid"></div>
+<p class="muted">QR cards are generated automatically for saved students. The QR contains the roll number only.</p>
+<div class="actions no-print"><button class="btn" id="printQrs">Print QR Cards</button></div>
+<div id="qrCards" class="qrgrid"></div>
+</div>
 </section>
 
-<section id="adminPanel" class="panel">
-<h2>Attendance Reports & Admin</h2>
-<div class="row no-print">
-<div><label for="reportMonth">Report month</label><input type="month" id="reportMonth"></div>
-<div style="align-self:end"><button class="btn secondary" id="loadReport">Load Report</button></div>
+<section id="reports" class="tab hidden">
+<div class="card">
+<h2>Attendance Reports</h2>
+<div class="grid"><div><label for="reportMonth">Month</label><input type="month" id="reportMonth"></div><div class="actions" style="align-items:end"><button class="btn" id="exportCsv">Export CSV</button><button class="btn secondary" id="backupJson">Backup JSON</button></div></div>
+<div class="tablewrap"><table><thead><tr><th>Date</th><th>Time</th><th>Roll</th><th>Name</th><th>Class</th><th>Status</th></tr></thead><tbody id="reportRows"></tbody></table></div>
 </div>
-<div class="actions no-print"><button class="btn secondary" id="exportCsv">Export Attendance CSV</button><button class="btn secondary" id="backupJson">Download Full Backup</button><label class="btn secondary" style="display:inline-block">Restore Backup<input type="file" id="restoreFile" accept=".json" hidden></label></div>
-<div id="reportSummary" class="status">No report loaded.</div>
-<div id="reportList"></div>
-<hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
-<h2>Clear Attendance Data</h2>
-<p class="note">Export a backup before clearing. These actions permanently remove attendance records from this browser on this device.</p>
-<div class="actions no-print"><button class="btn danger" id="clearMonth">Clear Selected Month</button><button class="btn danger" id="clearAll">Clear All Attendance</button></div>
-<p class="note"><strong>Important:</strong> This is a local starter app. Admin controls are not protected by a secure login. Anyone with access to this page on this phone can use them. Use test data until the academy approves a secure setup.</p>
 </section>
-<p class="note">Data is saved on this device in this browser. Keep regular backups. Clearing browser data, losing the phone, or changing browsers may remove records. Camera scanning needs HTTPS and camera permission. If the scanner is unsupported, use roll-number entry.</p>
+
+<section id="admin" class="tab hidden">
+<div class="card">
+<h2>Admin Tools</h2>
+<p class="muted">These controls are intended for the academy administrator on this device. This browser-only version does not provide secure staff accounts.</p>
+<div class="grid">
+<div><label for="adminPin">Admin PIN (optional local screen lock)</label><input id="adminPin" type="password" placeholder="Set a PIN for this device"></div>
+<div class="actions" style="align-items:end"><button class="btn secondary" id="setPin">Save PIN</button><button class="btn secondary" id="unlockAdmin">Unlock</button></div>
+</div>
+<div id="adminStatus" class="muted">Admin tools are locked until unlocked.</div>
+<div id="adminTools" class="hidden">
+<div class="actions"><button class="btn danger" id="clearMonth">Clear selected month</button><button class="btn danger" id="clearAll">Clear all attendance</button><button class="btn secondary" id="restoreBackup">Restore JSON backup</button></div>
+<input type="file" id="backupFile" accept="application/json" class="hidden">
+<p class="small">Make a JSON backup before clearing records. Clearing attendance does not delete students.</p>
+</div>
+</div>
+</section>
 </main>
+<footer>Mathematic Zone Attendance · Data is stored on this device's browser. Export backups regularly.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
 <script>
-const DB_NAME='MZAttendanceDB', DB_VERSION=1;
-let db, stream=null, detector=null, scanning=false, lastCode='', lastAt=0;
-const $=id=>document.getElementById(id);
-function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains('students'))d.createObjectStore('students',{keyPath:'roll'});if(!d.objectStoreNames.contains('attendance')){const s=d.createObjectStore('attendance',{keyPath:'id',autoIncrement:true});s.createIndex('date','date');s.createIndex('roll','roll');}};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
-function store(name,mode='readonly'){return db.transaction(name,mode).objectStore(name)}
-function all(name){return new Promise((res,rej)=>{const r=store(name).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
-function put(name,obj){return new Promise((res,rej)=>{const r=store(name,'readwrite').put(obj);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
-function del(name,key){return new Promise((res,rej)=>{const r=store(name,'readwrite').delete(key);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
-function clearStore(name){return new Promise((res,rej)=>{const r=store(name,'readwrite').clear();r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
-function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-function safeText(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-async function markPresent(raw){const roll=String(raw||'').trim();if(!roll){$('scanStatus').textContent='Enter a roll number first.';return}const students=await all('students');const student=students.find(s=>s.roll.toLowerCase()===roll.toLowerCase());if(!student){$('scanStatus').textContent='Student not found. Add or import this student first.';return}
-const date=today(),records=await all('attendance');if(records.some(r=>r.roll.toLowerCase()===student.roll.toLowerCase()&&r.date===date)){$('scanStatus').textContent=`Already present: ${student.name} (${student.roll})`;return}
-const now=new Date();await put('attendance',{roll:student.roll,name:student.name,className:student.className,date,time:now.toLocaleTimeString(),status:'Present'});$('scanStatus').textContent=`✓ PRESENT — ${student.name} (${student.roll})`;$('manualRoll').value='';}
-async function renderStudents(){const a=(await all('students')).sort((x,y)=>x.roll.localeCompare(y.roll));$('studentList').innerHTML=a.map(s=>`<div class="student"><strong>${safeText(s.name)} · ${safeText(s.roll)}</strong><div class="small">${safeText(s.className||'')}</div><div class="actions no-print"><button class="btn secondary" data-edit="${safeText(s.roll)}">Edit</button><button class="btn danger" data-delete="${safeText(s.roll)}">Delete</button></div></div>`).join('')||'<p class="note">No students added yet.</p>';renderQR(a)}
-function renderQR(students){const grid=$('qrGrid');grid.innerHTML='';if(!students.length){grid.innerHTML='<p class="note">Add students to generate QR cards automatically.</p>';return}students.forEach(s=>{const card=document.createElement('div');card.className='qr-card';card.innerHTML=`<div class="qr-name">${safeText(s.name)}</div><div class="small">${safeText(s.roll)} · ${safeText(s.className||'')}</div><div class="qr-code"></div>`;grid.appendChild(card);const target=card.querySelector('.qr-code');if(window.QRCode){new QRCode(target,{text:s.roll,width:128,height:128,correctLevel:QRCode.CorrectLevel.M})}else{target.textContent='QR library unavailable. Connect to internet and reload.'}})}
-$('saveStudent').onclick=async()=>{const roll=$('roll').value.trim(),name=$('studentName').value.trim(),className=$('studentClass').value.trim();if(!roll||!name){$('studentStatus').textContent='Roll number and student name are required.';return}await put('students',{roll,name,className});$('studentStatus').textContent=`Saved ${name}. QR card generated automatically.`;$('roll').value='';$('studentName').value='';$('studentClass').value='';await renderStudents()};
-$('clearStudentForm').onclick=()=>{['roll','studentName','studentClass'].forEach(id=>$(id).value='')};
-$('studentList').addEventListener('click',async e=>{const edit=e.target.dataset.edit,remove=e.target.dataset.delete;if(edit){const s=(await all('students')).find(x=>x.roll===edit);if(s){$('roll').value=s.roll;$('studentName').value=s.name;$('studentClass').value=s.className||'';window.scrollTo({top:0,behavior:'smooth'})}}if(remove&&confirm(`Delete student ${remove}? Existing attendance records will remain.`)){await del('students',remove);await renderStudents()}});
-$('manualCheck').onclick=()=>markPresent($('manualRoll').value);
-$('manualRoll').addEventListener('keydown',e=>{if(e.key==='Enter')markPresent($('manualRoll').value)});
-async function importCSV(){const file=$('csvFile').files[0];if(!file){$('studentStatus').textContent='Choose a CSV file first.';return}const text=await file.text();const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());let count=0;for(let i=1;i<lines.length;i++){const cols=lines[i].split(',').map(x=>x.trim().replace(/^"|"$/g,''));if(cols[0]&&cols[1]){await put('students',{roll:cols[0],name:cols[1],className:cols[2]||''});count++}}$('studentStatus').textContent=`Imported or updated ${count} students. QR cards generated automatically.`;await renderStudents()}
-$('importCsv').onclick=importCSV;
-$('printCards').onclick=()=>window.print();$('refreshCards').onclick=renderStudents;
-function csvEscape(v){return '"'+String(v??'').replace(/"/g,'""')+'"'}
-async function loadReport(){const month=$('reportMonth').value||today().slice(0,7),rows=(await all('attendance')).filter(r=>r.date.startsWith(month)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));$('reportSummary').textContent=`${rows.length} attendance record(s) for ${month}.`;$('reportList').innerHTML=rows.map(r=>`<div class="record"><strong>${safeText(r.name)} · ${safeText(r.roll)}</strong><div class="small">${safeText(r.date)} · ${safeText(r.time)} · ${safeText(r.status)}</div><div class="actions no-print"><button class="btn secondary" data-record-edit="${r.id}">Edit</button><button class="btn danger" data-record-delete="${r.id}">Delete</button></div></div>`).join('')||'<p class="note">No records for this month.</p>'}
-$('loadReport').onclick=loadReport;
-$('reportList').addEventListener('click',async e=>{const id=Number(e.target.dataset.recordEdit||e.target.dataset.recordDelete);if(!id)return;const rows=await all('attendance'),r=rows.find(x=>x.id===id);if(!r)return;if(e.target.dataset.recordDelete){if(confirm('Delete this attendance record?')){await del('attendance',id);loadReport()}return}const date=prompt('Attendance date (YYYY-MM-DD):',r.date);if(date===null)return;const time=prompt('Attendance time:',r.time);if(time===null)return;const status=prompt('Status:',r.status);if(status===null)return;await put('attendance',{...r,date,time,status});loadReport()});
-$('exportCsv').onclick=async()=>{const month=$('reportMonth').value||today().slice(0,7),rows=(await all('attendance')).filter(r=>r.date.startsWith(month));download('attendance-'+month+'.csv',['Roll Number,Name,Class,Date,Time,Status',...rows.map(r=>[r.roll,r.name,r.className,r.date,r.time,r.status].map(csvEscape).join(','))].join('\n'),'text/csv')};
-$('backupJson').onclick=async()=>download('mathematic-zone-backup-'+today()+'.json',JSON.stringify({students:await all('students'),attendance:await all('attendance')},null,2),'application/json');
-$('restoreFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data.students)||!Array.isArray(data.attendance))throw Error();if(!confirm('Restore backup? Existing data will be replaced.'))return;await clearStore('students');await clearStore('attendance');for(const s of data.students)await put('students',s);for(const r of data.attendance){const copy={...r};delete copy.id;await put('attendance',copy)}await renderStudents();await loadReport();alert('Backup restored.')}catch{alert('This backup file is not valid.')}e.target.value=''};
-$('clearMonth').onclick=async()=>{const month=$('reportMonth').value||today().slice(0,7);if(!confirm(`Permanently clear all attendance for ${month}? Export a backup first.`))return;for(const r of await all('attendance'))if(r.date.startsWith(month))await del('attendance',r.id);await loadReport()};
-$('clearAll').onclick=async()=>{if(!confirm('Permanently clear ALL attendance records on this device? Export a backup first.'))return;await clearStore('attendance');await loadReport()};
-function download(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
-$('startScan').onclick=async()=>{if(!('BarcodeDetector'in window)){$('cameraNote').textContent='This browser does not support QR camera scanning. Use the roll-number field below.';return}try{detector=new BarcodeDetector({formats:['qr_code']});stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});$('scanner').srcObject=stream;$('scanner').style.display='block';await $('scanner').play();scanning=true;scanLoop()}catch(e){$('cameraNote').textContent='Camera could not start. Check camera permission or use manual roll entry.'}};
-async function scanLoop(){if(!scanning)return;try{const codes=await detector.detect($('scanner'));if(codes.length){const code=codes[0].rawValue,now=Date.now();if(code!==lastCode||now-lastAt>2500){lastCode=code;lastAt=now;await markPresent(code)}}}catch(e){}requestAnimationFrame(scanLoop)}
-$('stopScan').onclick=()=>{scanning=false;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('scanner').style.display='none'};
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('section.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='studentsPanel')renderStudents();if(b.dataset.tab==='qrPanel')renderStudents();if(b.dataset.tab==='adminPanel')loadReport()});
-(async()=>{db=await openDB();$('reportMonth').value=today().slice(0,7);await renderStudents();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});})();
+(() => {
+"use strict";
+const DB_NAME = "MathematicZoneAttendanceV2";
+const DB_VERSION = 1;
+let db, editingOriginalRoll = null, stream = null, scanLoop = null, lastScanValue = "", lastScanAt = 0, adminUnlocked = false;
+const $ = id => document.getElementById(id);
+const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+const timeNow = () => new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function openDB(){
+ return new Promise((resolve,reject)=>{
+  const req=indexedDB.open(DB_NAME,DB_VERSION);
+  req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains("students"))d.createObjectStore("students",{keyPath:"roll"});if(!d.objectStoreNames.contains("attendance")){const s=d.createObjectStore("attendance",{keyPath:"id",autoIncrement:true});s.createIndex("date","date",{unique:false});}};
+  req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+ });
+}
+function all(store){return new Promise((resolve,reject)=>{const r=db.transaction(store).objectStore(store).getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error);});}
+function put(store,obj){return new Promise((resolve,reject)=>{const t=db.transaction(store,"readwrite");t.objectStore(store).put(obj);t.oncomplete=()=>resolve();t.onerror=()=>reject(t.error);});}
+function del(store,key){return new Promise((resolve,reject)=>{const t=db.transaction(store,"readwrite");t.objectStore(store).delete(key);t.oncomplete=()=>resolve();t.onerror=()=>reject(t.error);});}
+function clearStore(store){return new Promise((resolve,reject)=>{const t=db.transaction(store,"readwrite");t.objectStore(store).clear();t.oncomplete=()=>resolve();t.onerror=()=>reject(t.error);});}
+function message(text,ok=true){$("message").textContent=text;$("message").className=ok?"ok":"err";}
+async function markPresent(raw){
+ const roll=String(raw||"").trim();
+ if(!roll){message("Please enter or scan a roll number.",false);return;}
+ const students=await all("students");
+ const student=students.find(s=>s.roll.toLowerCase()===roll.toLowerCase());
+ if(!student){message("Student not found. Add this student first.",false);return;}
+ const date=todayISO(), records=await all("attendance");
+ if(records.some(r=>r.roll.toLowerCase()===student.roll.toLowerCase()&&r.date===date)){
+  message(`${student.name} is already marked present today.`,false);return;
+ }
+ await put("attendance",{roll:student.roll,name:student.name,className:student.className,date,time:timeNow(),status:"Present"});
+ $("manualRoll").value="";message(`✓ ${student.name} marked PRESENT.`,true);await renderAll();
+}
+async function saveStudent(){
+ const name=$("studentName").value.trim(),roll=$("studentRoll").value.trim(),className=$("studentClass").value.trim();
+ if(!name||!roll||!className){$("studentMessage").textContent="Please fill in name, roll number and class.";return;}
+ const students=await all("students");
+ const duplicate=students.find(s=>s.roll.toLowerCase()===roll.toLowerCase()&&s.roll!==editingOriginalRoll);
+ if(duplicate){$("studentMessage").textContent="That roll number already exists.";return;}
+ if(editingOriginalRoll && editingOriginalRoll!==roll){
+  const old=students.find(s=>s.roll===editingOriginalRoll);
+  if(old){await del("students",editingOriginalRoll);await put("students",{roll,name,className});}
+  const records=await all("attendance");
+  for(const r of records.filter(x=>x.roll===editingOriginalRoll)){r.roll=roll;r.name=name;r.className=className;await put("attendance",r);}
+ } else {await put("students",{roll,name,className});}
+ editingOriginalRoll=null;$("studentName").value="";$("studentRoll").value="";$("studentClass").value="";
+ $("studentFormTitle").textContent="Add Student";$("saveStudent").textContent="Save Student & Generate QR";$("cancelEdit").classList.add("hidden");
+ $("studentMessage").textContent="Student saved. QR card generated automatically.";await renderAll();
+}
+async function editStudent(roll){const s=(await all("students")).find(x=>x.roll===roll);if(!s)return;editingOriginalRoll=roll;$("studentName").value=s.name;$("studentRoll").value=s.roll;$("studentClass").value=s.className;$("studentFormTitle").textContent="Edit Student";$("saveStudent").textContent="Save Changes";$("cancelEdit").classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"});}
+async function deleteStudent(roll){if(!confirm(`Delete student ${roll}? Their attendance history will remain.`))return;await del("students",roll);await renderAll();}
+async function renderStudents(){
+ const students=(await all("students")).sort((a,b)=>a.roll.localeCompare(b.roll));
+ $("studentRows").innerHTML=students.map(s=>`<tr><td>${esc(s.roll)}</td><td>${esc(s.name)}</td><td>${esc(s.className)}</td><td><button class="btn secondary" data-edit="${esc(s.roll)}">Edit</button> <button class="btn danger" data-delete="${esc(s.roll)}">Delete</button></td></tr>`).join("")||'<tr><td colspan="4">No students yet.</td></tr>';
+ $("studentRows").querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>editStudent(b.dataset.edit));
+ $("studentRows").querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>deleteStudent(b.dataset.delete));
+}
+async function renderQR(){
+ const students=(await all("students")).sort((a,b)=>a.roll.localeCompare(b.roll));$("qrCards").innerHTML="";
+ students.forEach(s=>{const card=document.createElement("div");card.className="qr-card";const name=document.createElement("strong");name.textContent=s.name;const meta=document.createElement("div");meta.className="small";meta.textContent=`${s.roll} · ${s.className}`;const qr=document.createElement("div");qr.className="qr";card.append(name,meta,qr);$("qrCards").append(card);
+  if(window.QRCode){new QRCode(qr,{text:s.roll,width:132,height:132,correctLevel:QRCode.CorrectLevel.M});}else{qr.textContent="QR library unavailable. Connect to internet and reload.";}
+ });
+}
+async function renderToday(){
+ const records=(await all("attendance")).filter(r=>r.date===todayISO()).sort((a,b)=>a.time.localeCompare(b.time));
+ $("todayCount").textContent=`${records.length} student(s) present today.`;
+ $("todayRows").innerHTML=records.map(r=>`<tr><td>${esc(r.roll)}</td><td>${esc(r.name)}</td><td>${esc(r.className)}</td><td>${esc(r.time)}</td></tr>`).join("")||'<tr><td colspan="4">No attendance marked today.</td></tr>';
+}
+async function renderReports(){
+ const month=$("reportMonth").value||todayISO().slice(0,7);
+ const records=(await all("attendance")).filter(r=>r.date.startsWith(month)).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+ $("reportRows").innerHTML=records.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.time)}</td><td>${esc(r.roll)}</td><td>${esc(r.name)}</td><td>${esc(r.className)}</td><td>${esc(r.status)}</td></tr>`).join("")||'<tr><td colspan="6">No records for this month.</td></tr>';
+}
+async function renderAll(){await Promise.all([renderStudents(),renderQR(),renderToday(),renderReports()]);}
+async function startScanner(){
+ if(!navigator.mediaDevices?.getUserMedia){$("scanStatus").textContent="Camera is not supported here. Use manual roll entry.";return;}
+ if(!window.jsQR){$("scanStatus").textContent="Scanner library did not load. Connect to internet and reload, or use manual entry.";return;}
+ try{
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
+  $("video").srcObject=stream;$("video").classList.remove("hidden");await $("video").play();
+  $("startScan").disabled=true;$("stopScan").disabled=false;$("scanStatus").textContent="Camera running. Hold the QR code steady in view.";
+  const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d",{willReadFrequently:true);
+  const tick=async()=>{
+   if(!stream)return;
+   const v=$("video");
+   if(v.readyState===v.HAVE_ENOUGH_DATA){
+    canvas.width=v.videoWidth;canvas.height=v.videoHeight;ctx.drawImage(v,0,0,canvas.width,canvas.height);
+    const image=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const code=jsQR(image.data,image.width,image.height,{inversionAttempts:"attemptBoth"});
+    if(code?.data){const now=Date.now();if(code.data!==lastScanValue||now-lastScanAt>2500){lastScanValue=code.data;lastScanAt=now;await markPresent(code.data);}}
+   }
+   scanLoop=requestAnimationFrame(tick);
+  };tick();
+ }catch(e){$("scanStatus").textContent=`Camera error: ${e.message}. Allow camera permission or use manual entry.`;stopScanner();}
+}
+function stopScanner(){if(scanLoop)cancelAnimationFrame(scanLoop);scanLoop=null;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;} $("video").srcObject=null;$("video").classList.add("hidden");$("startScan").disabled=false;$("stopScan").disabled=true;}
+function download(name,content,type){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+async function exportCSV(){const month=$("reportMonth").value||todayISO().slice(0,7),records=(await all("attendance")).filter(r=>r.date.startsWith(month));const rows=[["Date","Time","Roll Number","Student Name","Class","Status"],...records.map(r=>[r.date,r.time,r.roll,r.name,r.className,r.status])];const csv=rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");download(`attendance-${month}.csv`,csv,"text/csv");}
+async function backup(){const data={format:"MathematicZoneBackupV2",students:await all("students"),attendance:await all("attendance")};download(`mathematic-zone-backup-${todayISO()}.json`,JSON.stringify(data,null,2),"application/json");}
+async function restore(file){try{const data=JSON.parse(await file.text());if(!Array.isArray(data.students)||!Array.isArray(data.attendance))throw new Error("Invalid backup file");if(!confirm("Restore this backup? Existing students and attendance will be replaced."))return;await clearStore("students");await clearStore("attendance");for(const s of data.students)await put("students",s);for(const r of data.attendance)await put("attendance",r);await renderAll();$("adminStatus").textContent="Backup restored.";}catch(e){alert("Could not restore backup: "+e.message);}}
+function monthSelected(){return $("reportMonth").value||todayISO().slice(0,7);}
+function setupAdmin(){
+ $("setPin").onclick=()=>{const pin=$("adminPin").value.trim();if(pin.length<4){$("adminStatus").textContent="Choose at least 4 digits/characters.";return;}localStorage.setItem("mz_admin_pin",pin);$("adminStatus").textContent="Local PIN saved. This is only a basic screen lock, not secure authentication.";};
+ $("unlockAdmin").onclick=()=>{const saved=localStorage.getItem("mz_admin_pin");if(!saved||$("adminPin").value===saved){adminUnlocked=true;$("adminTools").classList.remove("hidden");$("adminStatus").textContent="Admin tools unlocked on this device.";}else{$("adminStatus").textContent="Incorrect PIN.";};};
+ $("clearMonth").onclick=async()=>{if(!confirm(`Delete all attendance records for ${monthSelected()}? Export a backup first.`))return;const records=await all("attendance");for(const r of records.filter(x=>x.date.startsWith(monthSelected())))await del("attendance",r.id);await renderAll();};
+ $("clearAll").onclick=async()=>{if(!confirm("Delete ALL attendance records? This cannot be undone. Make a backup first."))return;await clearStore("attendance");await renderAll();};
+ $("backupJson").onclick=backup;$("restoreBackup").onclick=()=>$("backupFile").click();$("backupFile").onchange=e=>{if(e.target.files[0])restore(e.target.files[0]);};
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".tab").forEach(s=>s.classList.toggle("hidden",s.id!==b.dataset.tab));if(b.dataset.tab==="qrcards")renderQR();});
+$("manualMark").onclick=()=>markPresent($("manualRoll").value);$("manualRoll").addEventListener("keydown",e=>{if(e.key==="Enter")markPresent($("manualRoll").value);});
+$("saveStudent").onclick=saveStudent;$("cancelEdit").onclick=()=>{editingOriginalRoll=null;$("studentName").value=$("studentRoll").value=$("studentClass").value="";$("studentFormTitle").textContent="Add Student";$("saveStudent").textContent="Save Student & Generate QR";$("cancelEdit").classList.add("hidden");};
+$("startScan").onclick=startScanner;$("stopScan").onclick=stopScanner;$("printQrs").onclick=()=>window.print();$("reportMonth").value=todayISO().slice(0,7);$("reportMonth").onchange=renderReports;$("exportCsv").onclick=exportCSV;
+setupAdmin();
+openDB().then(async d=>{db=d;await renderAll();}).catch(e=>{alert("Database could not open: "+e.message);});
+if("serviceWorker" in navigator && location.protocol.startsWith("http"))window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+})();
 </script>
-</body></html>
+</body>
+</html>

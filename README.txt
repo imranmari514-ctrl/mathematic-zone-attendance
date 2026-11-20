@@ -1,31 +1,33 @@
-MATHEMATIC ZONE — ATTENDANCE PWA UPDATE
+MATHEMATIC ZONE ATTENDANCE — FRESH FIXED BUILD
 
-WHAT'S INCLUDED
-- Add or edit students.
-- QR cards are generated automatically when students are saved.
-- QR content is the student's roll number only.
-- Check-in only: first scan marks Present; repeat scans say Already present.
-- No check-out field or check-out time.
-- Student CSV import.
-- Monthly attendance report, edit/delete individual records.
-- Export attendance CSV and full JSON backup/restore.
-- Clear selected month or all attendance after confirmation.
-- PWA shell caching for offline use after the first successful online load.
+FILES
+- index.html
+- manifest.json
+- sw.js
+- README.txt
 
-DEPLOY
-1. Unzip this folder.
-2. Open your GitHub repository.
-3. Upload/replace index.html, manifest.json, sw.js and README.txt in the repository root.
+INSTALL / UPDATE ON GITHUB PAGES
+1. Download and extract this ZIP.
+2. In your GitHub repository, upload the four files to the repository root.
+3. Replace the old files when GitHub asks.
 4. Commit the changes.
-5. Open the GitHub Pages website in Chrome, refresh it, then use Chrome menu > Install app / Add to Home screen.
-6. Open the app once while online so the app and QR library can load and cache.
+5. Open your GitHub Pages address in Chrome and refresh. If the old version remains, clear this site's cached data in Chrome or open the site in an Incognito tab once.
+
+FEATURES
+- Add/edit/delete students.
+- QR code is generated automatically for every saved student.
+- QR content is the student's roll number only.
+- Camera QR scanning using jsQR and getUserMedia.
+- Manual roll-number attendance.
+- One Present record per student per day.
+- Today's attendance and monthly report.
+- CSV export and JSON backup/restore.
+- Basic local admin PIN screen lock and clear-month/clear-all tools.
 
 IMPORTANT LIMITATIONS
-- QR generation uses a QRCode.js library from a CDN. First load / first QR generation needs internet. After it has loaded and been cached, it may work offline; test before relying on it.
-- Camera scanning uses the browser BarcodeDetector API, which is not available in every Android browser. If unsupported, enter the roll number manually.
-- Camera requires HTTPS and permission.
-- Data is stored only in this browser on this phone using IndexedDB. It is not automatically sent to Google Sheets or another phone.
-- Export a JSON backup regularly. Browser data clearing, phone loss, or browser changes can remove records.
-- The Admin area is not protected by a secure login. This is a learning/prototype version, not a production-ready school system.
-- Use fictional test data while testing. Get academy approval before entering real student information, and do not upload student lists to a public GitHub repository.
-- A QR code identifies a roll number; it does not independently verify which person is holding it. Staff supervision is still needed.
+- The app stores data in IndexedDB on this device/browser only. It does not sync to Google Sheets or other phones.
+- The admin PIN is only a basic local screen lock, NOT secure server-side authentication. Do not store sensitive student information in this starter version.
+- The QR and scanner libraries load from a CDN on first visit. Open the app online once after deployment so the service worker can cache them. Camera requires HTTPS (GitHub Pages provides HTTPS) and camera permission.
+- Some browsers/phones may block camera access. Manual roll-number entry is included as a fallback.
+- Export JSON backups regularly. Clearing browser data or losing the phone can erase records.
+- Test with fictional students before using real student records. Get academy permission and have an adult/academy administrator oversee any real student data.

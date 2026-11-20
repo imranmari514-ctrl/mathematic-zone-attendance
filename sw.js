@@ -1,10 +1,26 @@
-const CACHE='mz-attendance-v2';
-const APP=['./','./index.html','./manifest.json'];
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP)).then(()=>self.skipWaiting()))});
-self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
-self.addEventListener('fetch',event=>{
-  const url=new URL(event.request.url);
-  if(event.request.method!=='GET')return;
-  if(url.origin===location.origin){event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>{const copy=response.clone();caches.open(CACHE).then(c=>c.put(event.request,copy));return response}).catch(()=>caches.match('./index.html'))));}
-  else if(url.hostname==='cdnjs.cloudflare.com'){event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>{const copy=response.clone();caches.open(CACHE).then(c=>c.put(event.request,copy));return response})))}
+const CACHE = "mz-attendance-v3";
+const CORE = ["./", "./index.html", "./manifest.json"];
+const LIBS = [
+ "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js",
+ "https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"
+];
+self.addEventListener("install", event => {
+ event.waitUntil((async()=>{
+  const cache=await caches.open(CACHE);
+  await cache.addAll(CORE);
+  await Promise.all(LIBS.map(async url=>{try{const r=await fetch(url);if(r.ok)await cache.put(url,r);}catch(e){}}));
+  await self.skipWaiting();
+ })());
+});
+self.addEventListener("activate",event=>event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));await self.clients.claim();})()));
+self.addEventListener("fetch",event=>{
+ const req=event.request;
+ if(req.method!=="GET")return;
+ event.respondWith((async()=>{
+  const cache=await caches.open(CACHE);
+  const cached=await cache.match(req,{ignoreSearch:true});
+  if(cached)return cached;
+  try{const response=await fetch(req);if(response.ok&&(req.url.startsWith(self.location.origin)||LIBS.includes(req.url)))cache.put(req,response.clone());return response;}
+  catch(e){if(req.mode==="navigate")return cache.match("./index.html");throw e;}
+ })());
 });
