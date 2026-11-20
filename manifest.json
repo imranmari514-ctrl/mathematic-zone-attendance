@@ -1,0 +1,10 @@
+{
+  "name": "Mathematic Zone Attendance",
+  "short_name": "MZ Attendance",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f3f7fc",
+  "theme_color": "#1456a0",
+  "description": "Offline QR attendance for Mathematic Zone",
+  "icons": []
+}

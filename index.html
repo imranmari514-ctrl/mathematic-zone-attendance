@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1456a0">
+<link rel="manifest" href="manifest.json">
+<title>Mathematic Zone Attendance</title>
+<style>
+:root{font-family:Arial,sans-serif;color:#172b45;background:#f3f7fc}
+*{box-sizing:border-box}body{margin:0}header{background:#1456a0;color:white;padding:18px}
+header h1{font-size:21px;margin:0 0 5px}header p{margin:0;font-size:13px}
+main{max-width:850px;margin:auto;padding:14px}
+nav{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+button,.tab{border:0;border-radius:9px;padding:11px 13px;background:#1456a0;color:white;font-weight:600;cursor:pointer}
+.tab{background:#dce9f8;color:#1456a0}.tab.active{background:#1456a0;color:white}
+.panel{display:none;background:white;border:1px solid #d8e3f0;border-radius:13px;padding:15px;margin-bottom:13px}
+.panel.active{display:block}h2{font-size:18px;margin:0 0 12px}
+input,select{width:100%;padding:12px;border:1px solid #bdcce0;border-radius:8px;margin:6px 0 12px;font-size:16px}
+label{font-size:13px;font-weight:bold} .muted{color:#64758b;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+button.secondary{background:#e4edf8;color:#1456a0}button.danger{background:#a52c37}
+#video{width:100%;max-height:340px;background:#111;border-radius:10px}
+.status{padding:12px;background:#edf4fc;border-radius:9px;margin:10px 0;white-space:pre-wrap}
+.student{border:1px solid #e0e8f2;border-radius:9px;padding:10px;margin:7px 0}
+#qrBox{display:flex;justify-content:center;padding:15px}
+table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid #e2e9f1;padding:8px;text-align:left}
+.tablewrap{overflow:auto}small{color:#61738a}
+</style>
+</head>
+<body>
+<header><h1>Mathematic Zone</h1><p>Offline QR Attendance System</p></header>
+<main>
+<div class="status" id="appStatus">Starting app…</div>
+<nav>
+<button class="tab active" data-tab="scan">Gate Scanner</button>
+<button class="tab" data-tab="students">Students</button>
+<button class="tab" data-tab="cards">QR Cards</button>
+<button class="tab" data-tab="reports">Reports</button>
+<button class="tab" data-tab="backup">Backup</button>
+</nav>
+
+<section class="panel active" id="scan">
+<h2>Gate scanner</h2>
+<p class="muted">Scan the student's QR card. The app automatically checks them in or out based on today's record.</p>
+<div class="row"><button id="startScan">Start camera</button><button class="secondary" id="stopScan">Stop camera</button></div>
+<video id="video" playsinline muted></video>
+<div class="status" id="scanStatus">Camera is stopped. You can also enter a roll number below.</div>
+<label for="manualRoll">Manual roll number</label><input id="manualRoll" placeholder="Enter roll number">
+<button id="manualSubmit">Record attendance</button>
+</section>
+
+<section class="panel" id="students">
+<h2>Student list</h2>
+<p class="muted">Import a CSV file with these columns: rollNumber,name,class. Use fictional records while testing.</p>
+<input type="file" id="csvFile" accept=".csv,text/csv">
+<div class="row"><button id="downloadTemplate" class="secondary">Download CSV template</button><button id="showStudents" class="secondary">Refresh list</button></div>
+<div id="studentList"></div>
+</section>
+
+<section class="panel" id="cards">
+<h2>Student QR card</h2>
+<label for="cardRoll">Student roll number</label><input id="cardRoll" placeholder="Enter roll number">
+<button id="makeQR">Create QR card</button>
+<div id="qrBox"></div><div id="qrDetails" class="muted"></div>
+<p class="muted">The QR code contains only the roll number, not the student's phone number or other private details.</p>
+</section>
+
+<section class="panel" id="reports">
+<h2>Attendance reports</h2>
+<label for="monthPick">Choose month</label><input type="month" id="monthPick">
+<div class="row"><button id="exportMonth">Export monthly CSV</button><button id="refreshReport" class="secondary">Show records</button></div>
+<div id="reportSummary" class="status">No report loaded.</div>
+<div class="tablewrap" id="reportTable"></div>
+</section>
+
+<section class="panel" id="backup">
+<h2>Backup and restore</h2>
+<p class="muted">Export a backup regularly. If the phone is lost, reset, or browser data is cleared, unexported offline records may be lost.</p>
+<div class="row"><button id="backupJSON">Download full backup</button><button class="secondary" id="restoreButton">Restore backup</button></div>
+<input type="file" id="restoreFile" accept=".json" hidden>
+<p class="muted">Monthly CSV files can be opened in Google Sheets. This starter version does not automatically sync to your existing Google Sheet.</p>
+</section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const DB_NAME='MZAttendanceDB', DB_VERSION=1;
+let db, stream=null, scanLoop=false, detector=null, lastCode='', lastAt=0;
+const $=id=>document.getElementById(id);
+function setStatus(msg){$('appStatus').textContent=msg}
+function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains('students'))d.createObjectStore('students',{keyPath:'roll'});if(!d.objectStoreNames.contains('records'))d.createObjectStore('records',{keyPath:'key'});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+function store(name,mode='readonly'){return db.transaction(name,mode).objectStore(name)}
+function getAll(name){return new Promise((res,rej)=>{const r=store(name).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function getOne(name,key){return new Promise((res,rej)=>{const r=store(name).get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function put(name,obj){return new Promise((res,rej)=>{const r=store(name,'readwrite').put(obj);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
+function todayParts(){const d=new Date();return {date:[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'),day:d.toLocaleDateString('en-US',{weekday:'long'}),time:d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true})}}
+function duration(a,b){if(!a||!b)return '';let parse=s=>{let [t,amp]=s.split(' '),[h,m,sec]=t.split(':').map(Number);if(amp==='PM'&&h!==12)h+=12;if(amp==='AM'&&h===12)h=0;return h*3600+m*60+(sec||0)};let n=parse(b)-parse(a);if(n<0)n+=86400;return `${Math.floor(n/3600)}h ${Math.floor(n%3600/60)}m` }
+async function recordRoll(raw){
+ const roll=String(raw||'').trim(); if(!roll){$('scanStatus').textContent='Enter a roll number first.';return}
+ const student=await getOne('students',roll);
+ if(!student){$('scanStatus').textContent='Invalid roll number. This student is not in the imported list.';return}
+ const p=todayParts(),key=roll+'_'+p.date;let rec=await getOne('records',key);
+ if(!rec){rec={key,roll,name:student.name,className:student.className||'',date:p.date,day:p.day,checkIn:p.time,checkOut:'',duration:''};await put('records',rec);$('scanStatus').textContent=`CHECK IN SUCCESS\n${student.name} (${roll})\n${p.date} ${p.time}`;}
+ else if(!rec.checkOut){rec.checkOut=p.time;rec.duration=duration(rec.checkIn,rec.checkOut);await put('records',rec);$('scanStatus').textContent=`CHECK OUT SUCCESS\n${student.name} (${roll})\nEntry: ${rec.checkIn}\nExit: ${p.time}\nDuration: ${rec.duration}`;}
+ else {$('scanStatus').textContent=`Already checked in and out today.\n${student.name} (${roll})\nEntry: ${rec.checkIn}\nExit: ${rec.checkOut}`;}
+ $('manualRoll').value=''; if($('monthPick').value===p.date.slice(0,7))loadReport();
+}
+function csvParse(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());return lines.map(line=>{let out=[],v='',q=false;for(let i=0;i<line.length;i++){let c=line[i];if(c==='"'&&line[i+1]==='"'&&q){v+='"';i++}else if(c==='"')q=!q;else if(c===','&&!q){out.push(v.trim());v=''}else v+=c}out.push(v.trim());return out})}
+$('csvFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;const rows=csvParse(await f.text());const headers=rows.shift().map(x=>x.toLowerCase());const ri=headers.indexOf('rollnumber'),ni=headers.indexOf('name'),ci=headers.indexOf('class');if(ri<0||ni<0){alert('CSV needs rollNumber and name columns.');return}let count=0;for(const row of rows){const roll=(row[ri]||'').trim(),name=(row[ni]||'').trim();if(roll&&name){await put('students',{roll,name,className:ci>=0?(row[ci]||'').trim():''});count++}}alert(`Imported or updated ${count} students.`);loadStudents();e.target.value=''});
+async function loadStudents(){const arr=await getAll('students');arr.sort((a,b)=>a.roll.localeCompare(b.roll,undefined,{numeric:true}));$('studentList').innerHTML=arr.map(s=>`<div class="student"><b>${escapeHTML(s.name)}</b><br><small>Roll: ${escapeHTML(s.roll)} · Class: ${escapeHTML(s.className||'—')}</small></div>`).join('')||'<p class="muted">No students imported yet.</p>'}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('manualSubmit').onclick=()=>recordRoll($('manualRoll').value);
+$('showStudents').onclick=loadStudents;
+$('downloadTemplate').onclick=()=>download('students_template.csv','rollNumber,name,class\nTEST001,Sample Student,Grade 8\nTEST002,Another Student,Grade 9\n');
+$('makeQR').onclick=async()=>{const roll=$('cardRoll').value.trim(),s=await getOne('students',roll);$('qrBox').innerHTML='';$('qrDetails').textContent='';if(!s){$('qrDetails').textContent='Student not found. Import the student list first.';return}if(typeof QRCode==='undefined'){$('qrDetails').textContent='QR generator is not loaded. Connect to the internet once, reload the app, and try again.';return}new QRCode($('qrBox'),{text:roll,width:220,height:220});$('qrDetails').textContent=`${s.name} · Roll ${s.roll} · ${s.className||''}`};
+async function startCamera(){if(!('BarcodeDetector'in window)){ $('scanStatus').textContent='This browser does not support built-in QR scanning. Use manual roll entry, or try an updated Chrome browser.';return}try{detector=new BarcodeDetector({formats:['qr_code']});stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});$('video').srcObject=stream;await $('video').play();scanLoop=true;scanFrame()}catch(e){$('scanStatus').textContent='Camera could not start. Allow camera permission and use the app through its HTTPS website.'}}
+async function scanFrame(){if(!scanLoop||!stream)return;try{const codes=await detector.detect($('video'));if(codes.length){const code=codes[0].rawValue,now=Date.now();if(code&&!(code===lastCode&&now-lastAt<3000)){lastCode=code;lastAt=now;await recordRoll(code)}}}catch(e){}requestAnimationFrame(scanFrame)}
+function stopCamera(){scanLoop=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('video').srcObject=null}
+$('startScan').onclick=startCamera;$('stopScan').onclick=stopCamera;
+function download(name,content,type='text/csv'){const a=document.createElement('a');const url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
+async function loadReport(){const month=$('monthPick').value||new Date().toISOString().slice(0,7);const arr=(await getAll('records')).filter(r=>r.date.startsWith(month)).sort((a,b)=>(a.date+a.roll).localeCompare(b.date+b.roll));$('reportSummary').textContent=`${arr.length} attendance record(s) for ${month}.`;$('reportTable').innerHTML='<table><thead><tr><th>Date</th><th>Day</th><th>Roll</th><th>Name</th><th>Check in</th><th>Check out</th><th>Duration</th></tr></thead><tbody>'+arr.map(r=>`<tr><td>${escapeHTML(r.date)}</td><td>${escapeHTML(r.day)}</td><td>${escapeHTML(r.roll)}</td><td>${escapeHTML(r.name)}</td><td>${escapeHTML(r.checkIn)}</td><td>${escapeHTML(r.checkOut||'—')}</td><td>${escapeHTML(r.duration||'—')}</td></tr>`).join('')+'</tbody></table>'}
+$('refreshReport').onclick=loadReport;$('monthPick').value=new Date().toISOString().slice(0,7);
+$('exportMonth').onclick=async()=>{const month=$('monthPick').value||new Date().toISOString().slice(0,7),arr=(await getAll('records')).filter(r=>r.date.startsWith(month));const cols=['roll','name','className','date','day','checkIn','checkOut','duration'];const csv=[cols.join(','),...arr.map(r=>cols.map(k=>'"'+String(r[k]||'').replace(/"/g,'""')+'"').join(','))].join('\n');download(`MathematicZone_${month}.csv`,csv)};
+$('backupJSON').onclick=async()=>{const data={app:'Mathematic Zone Attendance',version:1,exportedAt:new Date().toISOString(),students:await getAll('students'),records:await getAll('records')};download('MathematicZone_Backup.json',JSON.stringify(data,null,2),'application/json')};
+$('restoreButton').onclick=()=>$('restoreFile').click();
+$('restoreFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.students)||!Array.isArray(d.records))throw Error();for(const s of d.students)await put('students',s);for(const r of d.records)await put('records',r);alert('Backup restored.');loadStudents();loadReport()}catch(err){alert('Backup file is not valid.')}e.target.value=''};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='students')loadStudents();if(b.dataset.tab==='reports')loadReport()});
+(async()=>{try{db=await openDB();setStatus('Ready. Student data and attendance are stored on this phone.');if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});loadStudents()}catch(e){setStatus('Could not open local storage. Please use an updated Chrome browser.')}})();
+</script>
+</body>
+</html>
