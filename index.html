@@ -207,7 +207,7 @@ async function startScanner(){
   stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
   $("video").srcObject=stream;$("video").classList.remove("hidden");await $("video").play();
   $("startScan").disabled=true;$("stopScan").disabled=false;$("scanStatus").textContent="Camera running. Hold the QR code steady in view.";
-  const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d",{willReadFrequently:true);
+  const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d",{willReadFrequently:true});
   const tick=async()=>{
    if(!stream)return;
    const v=$("video");
