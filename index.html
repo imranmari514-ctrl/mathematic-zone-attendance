@@ -40,6 +40,7 @@ table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px
 <button class="tab" data-tab="cards">QR Cards</button>
 <button class="tab" data-tab="reports">Reports</button>
 <button class="tab" data-tab="backup">Backup</button>
+<button class="tab" data-tab="admin">Admin</button>
 </nav>
 
 <section class="panel active" id="scan">
@@ -74,6 +75,24 @@ table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px
 <div class="row"><button id="exportMonth">Export monthly CSV</button><button id="refreshReport" class="secondary">Show records</button></div>
 <div id="reportSummary" class="status">No report loaded.</div>
 <div class="tablewrap" id="reportTable"></div>
+</section>
+
+<section class="panel" id="admin">
+<h2>Admin — Manage records</h2>
+<div class="status">Make a backup before changing or deleting records. These controls are available on this phone; this starter version does not have secure administrator login.</div>
+<h3>Edit student</h3>
+<label for="adminStudentPick">Choose student</label><select id="adminStudentPick"></select>
+<label for="editStudentName">Student name</label><input id="editStudentName" placeholder="Student name">
+<label for="editStudentClass">Class</label><input id="editStudentClass" placeholder="Class">
+<div class="row"><button id="saveStudentEdit">Save student changes</button><button id="deleteStudent" class="danger">Delete student</button></div>
+<hr>
+<h3>Edit attendance</h3>
+<label for="adminRecordPick">Choose attendance record</label><select id="adminRecordPick"></select>
+<label for="editRecordDate">Date</label><input id="editRecordDate" type="date">
+<label for="editRecordTime">Arrival time</label><input id="editRecordTime" placeholder="09:00:00 AM">
+<label for="editRecordStatus">Status</label><select id="editRecordStatus"><option value="Present">Present</option><option value="Absent">Absent</option></select>
+<div class="row"><button id="saveRecordEdit">Save attendance changes</button><button id="deleteRecord" class="danger">Delete attendance</button></div>
+<p class="muted">Deleting a student removes them from the student list but keeps their old attendance records. Deleting an attendance record does not delete the student.</p>
 </section>
 
 <section class="panel" id="backup">
@@ -127,12 +146,28 @@ function stopCamera(){scanLoop=false;if(stream){stream.getTracks().forEach(t=>t.
 $('startScan').onclick=startCamera;$('stopScan').onclick=stopCamera;
 function download(name,content,type='text/csv'){const a=document.createElement('a');const url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
 async function loadReport(){const month=$('monthPick').value||new Date().toISOString().slice(0,7);const arr=(await getAll('records')).filter(r=>r.date.startsWith(month)).sort((a,b)=>(a.date+a.roll).localeCompare(b.date+b.roll));$('reportSummary').textContent=`${arr.length} attendance record(s) for ${month}.`;$('reportTable').innerHTML='<table><thead><tr><th>Date</th><th>Day</th><th>Roll</th><th>Name</th><th>Arrival time</th><th>Status</th></tr></thead><tbody>'+arr.map(r=>`<tr><td>${escapeHTML(r.date)}</td><td>${escapeHTML(r.day)}</td><td>${escapeHTML(r.roll)}</td><td>${escapeHTML(r.name)}</td><td>${escapeHTML(r.checkIn)}</td><td>✓ Present</td></tr>`).join('')+'</tbody></table>'}
+
+async function loadAdmin(){
+ const students=(await getAll('students')).sort((a,b)=>a.roll.localeCompare(b.roll,undefined,{numeric:true}));
+ $('adminStudentPick').innerHTML=students.map(s=>`<option value="${escapeHTML(s.roll)}">${escapeHTML(s.roll)} — ${escapeHTML(s.name)}</option>`).join('');
+ const records=(await getAll('records')).sort((a,b)=>(b.date+b.roll).localeCompare(a.date+a.roll));
+ $('adminRecordPick').innerHTML=records.map(r=>`<option value="${escapeHTML(r.key)}">${escapeHTML(r.date)} — ${escapeHTML(r.roll)} — ${escapeHTML(r.name)}</option>`).join('');
+ loadAdminStudentFields();loadAdminRecordFields();
+}
+async function loadAdminStudentFields(){const roll=$('adminStudentPick').value;if(!roll)return $('editStudentName').value=$('editStudentClass').value='';const s=await getOne('students',roll);if(s){$('editStudentName').value=s.name;$('editStudentClass').value=s.className||''}}
+async function loadAdminRecordFields(){const key=$('adminRecordPick').value;if(!key)return $('editRecordDate').value=$('editRecordTime').value='';const r=await getOne('records',key);if(r){$('editRecordDate').value=r.date;$('editRecordTime').value=r.checkIn||'';$('editRecordStatus').value=r.status||'Present'}}
+$('adminStudentPick').onchange=loadAdminStudentFields;$('adminRecordPick').onchange=loadAdminRecordFields;
+$('saveStudentEdit').onclick=async()=>{const oldRoll=$('adminStudentPick').value;if(!oldRoll)return alert('No student selected.');const old=await getOne('students',oldRoll);if(!old)return;const name=$('editStudentName').value.trim(),className=$('editStudentClass').value.trim();if(!name)return alert('Student name is required.');await put('students',{...old,name,className});const recs=(await getAll('records')).filter(r=>r.roll===oldRoll);for(const r of recs){r.name=name;r.className=className;await put('records',r)}alert('Student details updated.');await loadStudents();await loadAdmin();await loadReport()};
+$('deleteStudent').onclick=async()=>{const roll=$('adminStudentPick').value;if(!roll)return alert('No student selected.');if(!confirm(`Delete student ${roll} from the student list? Existing attendance records will be kept.`))return;await new Promise((res,rej)=>{const q=store('students','readwrite').delete(roll);q.onsuccess=res;q.onerror=()=>rej(q.error)});alert('Student removed from the student list. Old attendance records were kept.');await loadStudents();await loadAdmin()};
+$('saveRecordEdit').onclick=async()=>{const oldKey=$('adminRecordPick').value;if(!oldKey)return alert('No attendance record selected.');const r=await getOne('records',oldKey);if(!r)return;const date=$('editRecordDate').value,time=$('editRecordTime').value.trim();if(!date||!time)return alert('Date and arrival time are required.');const newKey=r.roll+'_'+date;if(newKey!==oldKey&&await getOne('records',newKey))return alert('This student already has an attendance record for that date.');r.date=date;r.day=new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'});r.checkIn=time;r.status=$('editRecordStatus').value;r.key=newKey;if(newKey!==oldKey)await new Promise((res,rej)=>{const q=store('records','readwrite').delete(oldKey);q.onsuccess=res;q.onerror=()=>rej(q.error)});await put('records',r);alert('Attendance record updated.');await loadAdmin();await loadReport()};
+$('deleteRecord').onclick=async()=>{const key=$('adminRecordPick').value;if(!key)return alert('No attendance record selected.');if(!confirm('Permanently delete this attendance record?'))return;await new Promise((res,rej)=>{const q=store('records','readwrite').delete(key);q.onsuccess=res;q.onerror=()=>rej(q.error)});alert('Attendance record deleted.');await loadAdmin();await loadReport()};
+
 $('refreshReport').onclick=loadReport;$('monthPick').value=new Date().toISOString().slice(0,7);
 $('exportMonth').onclick=async()=>{const month=$('monthPick').value||new Date().toISOString().slice(0,7),arr=(await getAll('records')).filter(r=>r.date.startsWith(month));const cols=['roll','name','className','date','day','checkIn','status'];const csv=[cols.join(','),...arr.map(r=>cols.map(k=>'"'+String(r[k]||'').replace(/"/g,'""')+'"').join(','))].join('\n');download(`MathematicZone_${month}.csv`,csv)};
 $('backupJSON').onclick=async()=>{const data={app:'Mathematic Zone Attendance',version:1,exportedAt:new Date().toISOString(),students:await getAll('students'),records:await getAll('records')};download('MathematicZone_Backup.json',JSON.stringify(data,null,2),'application/json')};
 $('restoreButton').onclick=()=>$('restoreFile').click();
 $('restoreFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.students)||!Array.isArray(d.records))throw Error();for(const s of d.students)await put('students',s);for(const r of d.records)await put('records',r);alert('Backup restored.');loadStudents();loadReport()}catch(err){alert('Backup file is not valid.')}e.target.value=''};
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='students')loadStudents();if(b.dataset.tab==='reports')loadReport()});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='students')loadStudents();if(b.dataset.tab==='reports')loadReport();if(b.dataset.tab==='admin')loadAdmin()});
 (async()=>{try{db=await openDB();setStatus('Ready. Student data and attendance are stored on this phone.');if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});loadStudents()}catch(e){setStatus('Could not open local storage. Please use an updated Chrome browser.')}})();
 </script>
 </body>
