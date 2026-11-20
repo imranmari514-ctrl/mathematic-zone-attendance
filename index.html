@@ -22,6 +22,8 @@ label{font-size:13px;font-weight:bold} .muted{color:#64758b;font-size:13px}
 button.secondary{background:#e4edf8;color:#1456a0}button.danger{background:#a52c37}
 #video{width:100%;max-height:340px;background:#111;border-radius:10px}
 .status{padding:12px;background:#edf4fc;border-radius:9px;margin:10px 0;white-space:pre-wrap}
+.success-card{background:#e8f7ed;border:2px solid #23934b;color:#176b35;border-radius:13px;padding:18px;text-align:center;margin:12px 0}
+.success-mark{font-size:46px;line-height:1.2;font-weight:bold}.success-title{font-size:20px;font-weight:800;margin:5px 0}.success-detail{font-size:14px;line-height:1.6}
 .student{border:1px solid #e0e8f2;border-radius:9px;padding:10px;margin:7px 0}
 #qrBox{display:flex;justify-content:center;padding:15px}
 table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid #e2e9f1;padding:8px;text-align:left}
@@ -42,7 +44,7 @@ table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px
 
 <section class="panel active" id="scan">
 <h2>Gate scanner</h2>
-<p class="muted">Scan the student's QR card. The app automatically checks them in or out based on today's record.</p>
+<p class="muted">Scan each student once when they arrive. One scan marks them PRESENT for the day. There is no check-out.</p>
 <div class="row"><button id="startScan">Start camera</button><button class="secondary" id="stopScan">Stop camera</button></div>
 <video id="video" playsinline muted></video>
 <div class="status" id="scanStatus">Camera is stopped. You can also enter a roll number below.</div>
@@ -94,16 +96,22 @@ function getAll(name){return new Promise((res,rej)=>{const r=store(name).getAll(
 function getOne(name,key){return new Promise((res,rej)=>{const r=store(name).get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 function put(name,obj){return new Promise((res,rej)=>{const r=store(name,'readwrite').put(obj);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
 function todayParts(){const d=new Date();return {date:[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'),day:d.toLocaleDateString('en-US',{weekday:'long'}),time:d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true})}}
-function duration(a,b){if(!a||!b)return '';let parse=s=>{let [t,amp]=s.split(' '),[h,m,sec]=t.split(':').map(Number);if(amp==='PM'&&h!==12)h+=12;if(amp==='AM'&&h===12)h=0;return h*3600+m*60+(sec||0)};let n=parse(b)-parse(a);if(n<0)n+=86400;return `${Math.floor(n/3600)}h ${Math.floor(n%3600/60)}m` }
 async function recordRoll(raw){
- const roll=String(raw||'').trim(); if(!roll){$('scanStatus').textContent='Enter a roll number first.';return}
+ const roll=String(raw||'').trim();
+ if(!roll){$('scanStatus').textContent='Enter a roll number first.';return}
  const student=await getOne('students',roll);
  if(!student){$('scanStatus').textContent='Invalid roll number. This student is not in the imported list.';return}
- const p=todayParts(),key=roll+'_'+p.date;let rec=await getOne('records',key);
- if(!rec){rec={key,roll,name:student.name,className:student.className||'',date:p.date,day:p.day,checkIn:p.time,checkOut:'',duration:''};await put('records',rec);$('scanStatus').textContent=`CHECK IN SUCCESS\n${student.name} (${roll})\n${p.date} ${p.time}`;}
- else if(!rec.checkOut){rec.checkOut=p.time;rec.duration=duration(rec.checkIn,rec.checkOut);await put('records',rec);$('scanStatus').textContent=`CHECK OUT SUCCESS\n${student.name} (${roll})\nEntry: ${rec.checkIn}\nExit: ${p.time}\nDuration: ${rec.duration}`;}
- else {$('scanStatus').textContent=`Already checked in and out today.\n${student.name} (${roll})\nEntry: ${rec.checkIn}\nExit: ${rec.checkOut}`;}
- $('manualRoll').value=''; if($('monthPick').value===p.date.slice(0,7))loadReport();
+ const p=todayParts(),key=roll+'_'+p.date;
+ const existing=await getOne('records',key);
+ if(existing){
+   $('scanStatus').innerHTML=`<div class="success-card"><div class="success-mark">✓</div><div class="success-title">ALREADY PRESENT</div><div class="success-detail">${escapeHTML(student.name)}<br>Roll: ${escapeHTML(roll)}<br>Attendance was already marked today at ${escapeHTML(existing.checkIn||'')}.</div></div>`;
+ } else {
+   const rec={key,roll,name:student.name,className:student.className||'',date:p.date,day:p.day,checkIn:p.time,status:'Present'};
+   await put('records',rec);
+   $('scanStatus').innerHTML=`<div class="success-card"><div class="success-mark">✓</div><div class="success-title">PRESENT — CHECK-IN SUCCESSFUL</div><div class="success-detail">${escapeHTML(student.name)}<br>Roll: ${escapeHTML(roll)}<br>${escapeHTML(p.day)}, ${escapeHTML(p.date)}<br>Time: ${escapeHTML(p.time)}</div></div>`;
+ }
+ $('manualRoll').value='';
+ if($('monthPick').value===p.date.slice(0,7))loadReport();
 }
 function csvParse(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());return lines.map(line=>{let out=[],v='',q=false;for(let i=0;i<line.length;i++){let c=line[i];if(c==='"'&&line[i+1]==='"'&&q){v+='"';i++}else if(c==='"')q=!q;else if(c===','&&!q){out.push(v.trim());v=''}else v+=c}out.push(v.trim());return out})}
 $('csvFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;const rows=csvParse(await f.text());const headers=rows.shift().map(x=>x.toLowerCase());const ri=headers.indexOf('rollnumber'),ni=headers.indexOf('name'),ci=headers.indexOf('class');if(ri<0||ni<0){alert('CSV needs rollNumber and name columns.');return}let count=0;for(const row of rows){const roll=(row[ri]||'').trim(),name=(row[ni]||'').trim();if(roll&&name){await put('students',{roll,name,className:ci>=0?(row[ci]||'').trim():''});count++}}alert(`Imported or updated ${count} students.`);loadStudents();e.target.value=''});
@@ -118,9 +126,9 @@ async function scanFrame(){if(!scanLoop||!stream)return;try{const codes=await de
 function stopCamera(){scanLoop=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('video').srcObject=null}
 $('startScan').onclick=startCamera;$('stopScan').onclick=stopCamera;
 function download(name,content,type='text/csv'){const a=document.createElement('a');const url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
-async function loadReport(){const month=$('monthPick').value||new Date().toISOString().slice(0,7);const arr=(await getAll('records')).filter(r=>r.date.startsWith(month)).sort((a,b)=>(a.date+a.roll).localeCompare(b.date+b.roll));$('reportSummary').textContent=`${arr.length} attendance record(s) for ${month}.`;$('reportTable').innerHTML='<table><thead><tr><th>Date</th><th>Day</th><th>Roll</th><th>Name</th><th>Check in</th><th>Check out</th><th>Duration</th></tr></thead><tbody>'+arr.map(r=>`<tr><td>${escapeHTML(r.date)}</td><td>${escapeHTML(r.day)}</td><td>${escapeHTML(r.roll)}</td><td>${escapeHTML(r.name)}</td><td>${escapeHTML(r.checkIn)}</td><td>${escapeHTML(r.checkOut||'—')}</td><td>${escapeHTML(r.duration||'—')}</td></tr>`).join('')+'</tbody></table>'}
+async function loadReport(){const month=$('monthPick').value||new Date().toISOString().slice(0,7);const arr=(await getAll('records')).filter(r=>r.date.startsWith(month)).sort((a,b)=>(a.date+a.roll).localeCompare(b.date+b.roll));$('reportSummary').textContent=`${arr.length} attendance record(s) for ${month}.`;$('reportTable').innerHTML='<table><thead><tr><th>Date</th><th>Day</th><th>Roll</th><th>Name</th><th>Arrival time</th><th>Status</th></tr></thead><tbody>'+arr.map(r=>`<tr><td>${escapeHTML(r.date)}</td><td>${escapeHTML(r.day)}</td><td>${escapeHTML(r.roll)}</td><td>${escapeHTML(r.name)}</td><td>${escapeHTML(r.checkIn)}</td><td>✓ Present</td></tr>`).join('')+'</tbody></table>'}
 $('refreshReport').onclick=loadReport;$('monthPick').value=new Date().toISOString().slice(0,7);
-$('exportMonth').onclick=async()=>{const month=$('monthPick').value||new Date().toISOString().slice(0,7),arr=(await getAll('records')).filter(r=>r.date.startsWith(month));const cols=['roll','name','className','date','day','checkIn','checkOut','duration'];const csv=[cols.join(','),...arr.map(r=>cols.map(k=>'"'+String(r[k]||'').replace(/"/g,'""')+'"').join(','))].join('\n');download(`MathematicZone_${month}.csv`,csv)};
+$('exportMonth').onclick=async()=>{const month=$('monthPick').value||new Date().toISOString().slice(0,7),arr=(await getAll('records')).filter(r=>r.date.startsWith(month));const cols=['roll','name','className','date','day','checkIn','status'];const csv=[cols.join(','),...arr.map(r=>cols.map(k=>'"'+String(r[k]||'').replace(/"/g,'""')+'"').join(','))].join('\n');download(`MathematicZone_${month}.csv`,csv)};
 $('backupJSON').onclick=async()=>{const data={app:'Mathematic Zone Attendance',version:1,exportedAt:new Date().toISOString(),students:await getAll('students'),records:await getAll('records')};download('MathematicZone_Backup.json',JSON.stringify(data,null,2),'application/json')};
 $('restoreButton').onclick=()=>$('restoreFile').click();
 $('restoreFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.students)||!Array.isArray(d.records))throw Error();for(const s of d.students)await put('students',s);for(const r of d.records)await put('records',r);alert('Backup restored.');loadStudents();loadReport()}catch(err){alert('Backup file is not valid.')}e.target.value=''};
